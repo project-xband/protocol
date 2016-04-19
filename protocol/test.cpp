@@ -49,6 +49,7 @@ void testRun (sTest * pTestData)
     createNewAP (pTestData, nullDeviceID);
     
     createNewClient(pTestData, nullDeviceID);
+    createNewClient(pTestData, nullDeviceID);
     
 // run test loop
     while (repeat)
@@ -75,9 +76,20 @@ void testRun (sTest * pTestData)
 // create additional devices and scheduled events and cause various device states to occur
 
 // ADD CODE HERE ...
+            packets dataPacket;
+            BYTE message[] = "Hello World";
+            DWORD hashValue;
+            BYTE bytesSent;
+            
+            sendData(& dataPacket, pTestData->accessPointDeviceIDs[0].accessPointDeviceID, pTestData->clientDeviceIDs[0].myDeviceID, pTestData->clientDeviceIDs[1].myDeviceID, strlen((const char *)message), &hashValue, message, &bytesSent);
+            transmitPacket(pTestData, & dataPacket);
+        
+            for (apIndex = 0; apIndex < pTestData->accessPointDeviceCount; apIndex++)
+            {
+                receiveAccessPointPacket(pTestData, apIndex);
+            }
 
-
-//            removeReceivedPacketFromQueue (pTestData);
+            removeReceivedPacketFromQueue (pTestData);
             
             testTime = GetMilliCount();
         }

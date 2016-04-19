@@ -40,7 +40,11 @@ void processRegistrationReply (sTest * pTestData, DEVICE_ID receivingDeviceID, D
 
 void processData (sTest * pTestData, DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, DWORD messageTotalLength, BYTE messageFragmentLength, DWORD hash, BYTE * pMessageBody)
 {
-    ;
+    // deal with AP target data versus other client data target
+    if ( CompareDeviceID (receivingDeviceID, apDeviceID) )
+    {
+        printf("message received ==> %s\n", pMessageBody);
+    }
 }
 
 void processMulti (sTest * pTestData, DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, BYTE messageFragmentLength, DWORD hash, WORD sequenceNumber, BYTE * pMessageBody)
