@@ -91,11 +91,23 @@ void sendHeaderAndData (sTest * pTestData, BYTE * pMessage)
     pSendManager = (sSendManager *)malloc(sizeof(sSendManager));
     
     pManager->puManager = (uMessageManager *) pSendManager;
+
+/*
+    pDataPacket->standard.typeOfPacket = TYPE_DATA;
+    CopyDeviceID (& pDataPacket->data.accessPointDeviceID, apDeviceID);
+    CopyDeviceID (& pDataPacket->data.destinationDeviceID, destDeviceID);
+    CopyDeviceID (& pDataPacket->data.sourceDeviceID,      sourceDeviceID);
+    *hash = generateHash(pMessageBody, messageLength);
+    pDataPacket->data.hash = *hash;
+    pDataPacket->data.messageTotalLength = messageLength;
+    *pMessageBytesSent = (messageLength < MAX_MESSAGE_LENGTH) ? messageLength : MAX_MESSAGE_LENGTH;
+    memcpy (pDataPacket->data.messageBody, pMessageBody, *pMessageBytesSent);
+*/
     
-    sessionState = SEND_SESSION_SENT_HEADER;
-    destinationDeviceID = ;
-    sourceDeviceID;
-    hash;
+    pSendManager->sessionState = SEND_SESSION_SENT_HEADER;
+    CopyDeviceID(& pSendManager->destinationDeviceID, destinationDeviceID);
+    CopyDeviceID(& pSendManager->sourceDeviceID, sourceDeviceID);
+    hash = generateHash(<#uint8_t *pMessageBody#>, messageLength);
     messageTotalLength;
     messageFragmentLength;
     sequenceNumber;
