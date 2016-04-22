@@ -87,6 +87,7 @@ void sendMulti (packets * pMultiPacket, DEVICE_ID apDeviceID, DEVICE_ID destDevi
 // clients, AP's and repeaters send this ack packet for initial and fragments of messages using this packet
 void sendDataAck (packets * pAckPacket, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID myDeviceID, DWORD hash, WORD sequenceNumber)
 {
+    pAckPacket->standard.typeOfPacket = TYPE_ACK;
     CopyDeviceID (& pAckPacket->ack.accessPointDeviceID, apDeviceID);
     CopyDeviceID (& pAckPacket->ack.destinationDeviceID, destDeviceID);
     CopyDeviceID (& pAckPacket->ack.sourceDeviceID,      myDeviceID);

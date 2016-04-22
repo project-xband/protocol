@@ -45,6 +45,7 @@ void processData (sTest * pTestData, DEVICE_ID receivingDeviceID, DEVICE_ID apDe
     if ( CompareDeviceID (receivingDeviceID, apDeviceID) )
     {
         printf("message received ==> %s\n", pMessageBody);
+        receiveHeaderAndData (pTestData, apDeviceID, destDeviceID, sourceDeviceID, messageTotalLength, messageFragmentLength, hash, pMessageBody);
     }
 }
 
@@ -55,6 +56,8 @@ void processMulti (sTest * pTestData, DEVICE_ID receivingDeviceID, DEVICE_ID apD
 
 void processAck (sTest * pTestData, DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, DWORD hash, WORD sequenceNumber)
 {
+// once receive ack, then send multi if needed
+    
     ;
 }
 
@@ -99,30 +102,72 @@ void sendHeaderAndData (sTest * pTestData, BYTE * pMessage)
     sendData(& dataPacket, apDeviceID, destinationDeviceID, sourceDeviceID, messageLength, &hashValue, pMessage, &bytesSent);
 
 // NTR:  check for allocator failure
-    pManager     = (sManager *)malloc(sizeof(sManager));
-    pSendManager = (sSendManager *)malloc(sizeof(sSendManager));
     
-    pManager->puManager = (uMessageManager *) pSendManager;
+    if (messageLength > bytesSent)
+    {
+        pManager     = (sManager *)malloc(sizeof(sManager));
+        pSendManager = (sSendManager *)malloc(sizeof(sSendManager));
     
-    listAppendNode (& pSendManagerList, pManager);
+        pManager->puManager = (uMessageManager *) pSendManager;
     
-    pSendManager->sessionState          = SEND_SESSION_SENT_HEADER;
-    CopyDeviceID (& pSendManager->apDeviceID,          apDeviceID);
-    CopyDeviceID (& pSendManager->destinationDeviceID, destinationDeviceID);
-    CopyDeviceID (& pSendManager->sourceDeviceID,      sourceDeviceID);
-    pSendManager->hash                  = hashValue;
-    pSendManager->messageTotalLength    = messageLength;
-    pSendManager->messageFragmentLength = bytesSent;
-    pSendManager->sequenceNumber        = 0;
-    pSendManager->pMessageBody          = pMessage;
-   
+        listAppendNode (& pSendManagerList, pManager);
+    
+        pSendManager->sessionState          = SEND_SESSION_SENT_HEADER;
+        CopyDeviceID (& pSendManager->apDeviceID,          apDeviceID);
+        CopyDeviceID (& pSendManager->destinationDeviceID, destinationDeviceID);
+        CopyDeviceID (& pSendManager->sourceDeviceID,      sourceDeviceID);
+        pSendManager->hash                  = hashValue;
+        pSendManager->messageTotalLength    = messageLength;
+        pSendManager->messageFragmentLength = bytesSent;
+        pSendManager->sequenceNumber        = 0;
+        pSendManager->pMessageBody          = pMessage;
+    }
+    else
+    {
+        ;   // full message sent in a single packet
+    }
+    
     transmitPacket(pTestData, & dataPacket);
 }
 
 // process each portion of the send session state and transmit message fragments, receive acks and handle errors
-void processSendSession (void)
+//void processSendSession (void)
+void processSendSession (sTest * pTestData, packets * packet, sSendManager * pSendManager)
 {
-    ;
+    
+    
+    switch (pSendManager->sessionState) {
+        case SEND_SESSION_NULL:
+            ;
+            break;
+            
+        case SEND_SESSION_SENT_HEADER:
+            ;
+            break;
+            
+        case SEND_SESSION_SENT_MULTI:
+            ;
+            break;
+            
+        case SEND_SESSION_WAITING_FOR_ACK:
+            ;
+            break;
+            
+        case SEND_SESSION_SENT_IT_ALL:
+            ;
+            break;
+            
+        case SEND_SESSION_CALLED_APP_CODE:
+            ;
+            break;
+            
+        case SEND_SESSION_WAITING_TO_END:
+            ;
+            break;
+            
+        default:
+            break;
+    }
 }
 
 // call Client or Access Point application code when the message has been completely sent
@@ -132,15 +177,13 @@ void sentFullMessage (void)
 }
 
 // setup a receive message session
-void receiveHeaderAndData (sTest * pTestData)
+void receiveHeaderAndData (sTest * pTestData, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, DWORD messageTotalLength, BYTE messageFragmentLength, DWORD hash, BYTE * pMessageBody)
 {
-    WORD apIndex;
-    for (apIndex = 0; apIndex < pTestData->accessPointDeviceCount; apIndex++)
-    {
-        receiveAccessPointPacket(pTestData, apIndex);
-    }
+    packets AckPacket;
+    sendDataAck (& AckPacket, apDeviceID, destDeviceID, sourceDeviceID, hash, 0);
+    
+    transmitPacket(pTestData, & AckPacket);
 
-    removeReceivedPacketFromQueue (pTestData);
 }
 
 

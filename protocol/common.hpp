@@ -83,7 +83,7 @@ void sManagerInit (void);  // Initialize send and receive message session subsys
 void sendHeaderAndData (sTest * pTestData, BYTE * pMessage);  // setup a send message session
 void processSendSession (void);  // process each portion of the send session state and transmit message fragments, receive acks and handle errors
 void sentFullMessage (void);  // call Client or Access Point application code when the message has been completely sent
-void receiveHeaderAndData (sTest * pTestData);  // setup a receive message session
+void receiveHeaderAndData (sTest * pTestData, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, DWORD messageTotalLength, BYTE messageFragmentLength, DWORD hash, BYTE * pMessageBody);
 void processReceiveSession (void);  // process each portion of the receive session state and receive message fragments, send acks and handle timeout errors waiting for new message fragments
 void receivedFullMessage (void);  // call Client or Access Point application code when the message has been completely received
 

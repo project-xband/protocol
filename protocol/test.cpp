@@ -1,3 +1,4 @@
+
 //
 //  test.cpp
 //  protocol
@@ -58,6 +59,7 @@ void testRun (sTest * pTestData)
     {
         if ((testTime + 1000) < GetMilliCount() )
         {
+/*
         // broadcast heartbeat to all clients, repeaters and APs
             sendHeartbeats (pTestData);
         
@@ -74,25 +76,36 @@ void testRun (sTest * pTestData)
             
        // reset packet queue to empty
             pTestData->transmittedPacketQueueDepth = 0;
-        
+*/
 // create additional devices and scheduled events and cause various device states to occur
 
 // ADD CODE HERE ...
             
             BYTE pMessage[] = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
  
-             sendHeaderAndData (pTestData, pMessage);
+            sendHeaderAndData (pTestData, pMessage);
             
+            WORD apIndex;
+            for (apIndex = 0; apIndex < pTestData->accessPointDeviceCount; apIndex++)
+            {
+                receiveAccessPointPacket(pTestData, apIndex);
+            }
             
+            WORD clIndex;
+            for (clIndex = 0; clIndex < pTestData->clientDeviceCount; clIndex++)
+            {
+                receiveClientPacket(pTestData, clIndex);
+            }
+
+            // reset packet queue to empty
+            pTestData->transmittedPacketQueueDepth = 0;
             
+//            removeReceivedPacketFromQueue (pTestData);
 
              testTime = GetMilliCount();
         }
     }
 }
-
-// Need to create for multi data
-
 
 //----------------------------------------------------------------------------------
 void createNewAP (sTest * pTestData, DEVICE_ID apDeviceID)
