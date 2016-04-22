@@ -61,22 +61,34 @@ void processAck (sTest * pTestData, DEVICE_ID receivingDeviceID, DEVICE_ID apDev
 
 
 //----------------------------------------------------------------------------------
+// setup and process send and receive message sessions
+
+sManager * pSendManagerList;
+sManager * pReceiveManagerList;
+
+void sManagerInit (void)
+{
+    pSendManagerList    = (sManager *) malloc (sizeof(sManager));
+    pReceiveManagerList = (sManager *) malloc (sizeof(sManager));
+    
+    pSendManagerList->pNextManager    = NULL;
+    pSendManagerList->puManager       = NULL;
+    pReceiveManagerList->pNextManager = NULL;
+    pReceiveManagerList->puManager    = NULL;
+}
+
 // setup a send message session
-
-sManager * pSendManagerList    = NULL;
-sManager * pReceiveManagerList = NULL;
-
 void sendHeaderAndData (sTest * pTestData, BYTE * pMessage)
 {
     sManager     * pManager;
     sSendManager * pSendManager;
     packets        dataPacket;
+    DEVICE_ID      apDeviceID;
+    DEVICE_ID      destinationDeviceID;
+    DEVICE_ID      sourceDeviceID;
     DWORD          hashValue;
     BYTE           bytesSent;
     DWORD          messageLength;
-    DEVICE_ID      apDeviceID;
-    DEVICE_ID      sourceDeviceID;
-    DEVICE_ID      destinationDeviceID;
     
     CopyDeviceID (& apDeviceID, pTestData->accessPointDeviceIDs[0].accessPointDeviceID);
     CopyDeviceID (& destinationDeviceID, pTestData->clientDeviceIDs[0].myDeviceID);
@@ -92,26 +104,19 @@ void sendHeaderAndData (sTest * pTestData, BYTE * pMessage)
     
     pManager->puManager = (uMessageManager *) pSendManager;
     
-    sessionState = SEND_SESSION_SENT_HEADER;
-    destinationDeviceID = ;
-    sourceDeviceID;
-    hash;
-    messageTotalLength;
-    messageFragmentLength;
-    sequenceNumber;
-    * pMessageBody;
-    
     listAppendNode (& pSendManagerList, pManager);
     
-    if (bytesSent < messageLength)
-    {
-        
-        
-        
-    }
-    
+    pSendManager->sessionState          = SEND_SESSION_SENT_HEADER;
+    CopyDeviceID (& pSendManager->apDeviceID,          apDeviceID);
+    CopyDeviceID (& pSendManager->destinationDeviceID, destinationDeviceID);
+    CopyDeviceID (& pSendManager->sourceDeviceID,      sourceDeviceID);
+    pSendManager->hash                  = hashValue;
+    pSendManager->messageTotalLength    = messageLength;
+    pSendManager->messageFragmentLength = bytesSent;
+    pSendManager->sequenceNumber        = 0;
+    pSendManager->pMessageBody          = pMessage;
+   
     transmitPacket(pTestData, & dataPacket);
-
 }
 
 // process each portion of the send session state and transmit message fragments, receive acks and handle errors

@@ -19,6 +19,8 @@ void test (void)
     sTest * pTestData;
     
     pTestData = testInit();
+    
+    sManagerInit ();
 
     testRun(pTestData);
 }

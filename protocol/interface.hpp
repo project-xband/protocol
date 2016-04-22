@@ -9,14 +9,6 @@
 #ifndef interface_hpp
 #define interface_hpp
 
-enum receiveSessionStates {
-    RECEIVE_SESSION_NULL            = 0,
-    RECEIVE_SESSION_GOT_HEADER      = 1,
-    RECEIVE_SESSION_GOT_MULTI       = 2,
-    RECEIVE_SESSION_GOT_IT_ALL      = 3,
-    RECEIVE_SESSION_CALLED_APP_CODE = 4,
-    RECEIVE_SESSION_WAITING_TO_END  = 5
-};
 
 enum sendSessionStates {
     
@@ -29,9 +21,19 @@ enum sendSessionStates {
     SEND_SESSION_WAITING_TO_END  = 6
 };
 
+enum receiveSessionStates {
+    RECEIVE_SESSION_NULL            = 0,
+    RECEIVE_SESSION_GOT_HEADER      = 1,
+    RECEIVE_SESSION_GOT_MULTI       = 2,
+    RECEIVE_SESSION_GOT_IT_ALL      = 3,
+    RECEIVE_SESSION_CALLED_APP_CODE = 4,
+    RECEIVE_SESSION_WAITING_TO_END  = 5
+};
+
 typedef struct sSendManager_t
 {
     BYTE      sessionState;
+    DEVICE_ID apDeviceID;
     DEVICE_ID destinationDeviceID;
     DEVICE_ID sourceDeviceID;
     DWORD     hash;
@@ -45,6 +47,7 @@ typedef struct sSendManager_t
 typedef struct sReceiveManager_t
 {
     BYTE      sessionState;
+    DEVICE_ID apDeviceID;
     DEVICE_ID destinationDeviceID;
     DEVICE_ID sourceDeviceID;
     DWORD     hash;
@@ -68,9 +71,9 @@ typedef struct sManager_t
 
 
 void listAppendNode (sManager * * ppManagerList, sManager * pNewManager);
-int listDeleteNode (sManager * * ppManagerList, sManager * pManagerToDelete);
+int  listDeleteNode (sManager * * pppManagerList, sManager * pManagerToDelete);
 void listWalk (sManager * pManagerList);
-int listLength (sManager * pManagerList);
+int  listLength (sManager * pManagerList);
 
 
 #endif /* interface_hpp */

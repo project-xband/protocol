@@ -79,5 +79,12 @@ void processData (sTest* pTestData, DEVICE_ID receivingDeviceID, DEVICE_ID apDev
 void processMulti (sTest * pTestData, DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, BYTE messageFragmentLength, DWORD hash, WORD sequenceNumber, BYTE * pMessageBody);
 void processAck (sTest * pTestData, DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, DWORD hash, WORD sequenceNumber);
 
-void sendHeaderAndData (sTest * pTestData, BYTE * pMessage);
+void sManagerInit (void);  // Initialize send and receive message session subsystem
+void sendHeaderAndData (sTest * pTestData, BYTE * pMessage);  // setup a send message session
+void processSendSession (void);  // process each portion of the send session state and transmit message fragments, receive acks and handle errors
+void sentFullMessage (void);  // call Client or Access Point application code when the message has been completely sent
+void receiveHeaderAndData (sTest * pTestData);  // setup a receive message session
+void processReceiveSession (void);  // process each portion of the receive session state and receive message fragments, send acks and handle timeout errors waiting for new message fragments
+void receivedFullMessage (void);  // call Client or Access Point application code when the message has been completely received
+
 #endif /* common_h */
