@@ -76,25 +76,21 @@ void testRun (sTest * pTestData)
 // create additional devices and scheduled events and cause various device states to occur
 
 // ADD CODE HERE ...
-            packets dataPacket;
-            BYTE message[] = "Hello World";
-            DWORD hashValue;
-            BYTE bytesSent;
             
-            sendData(& dataPacket, pTestData->accessPointDeviceIDs[0].accessPointDeviceID, pTestData->clientDeviceIDs[0].myDeviceID, pTestData->clientDeviceIDs[1].myDeviceID, strlen((const char *)message), &hashValue, message, &bytesSent);
-            transmitPacket(pTestData, & dataPacket);
-        
-            for (apIndex = 0; apIndex < pTestData->accessPointDeviceCount; apIndex++)
-            {
-                receiveAccessPointPacket(pTestData, apIndex);
-            }
+            BYTE pMessage[] = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+ 
+             sendHeaderAndData (pTestData, pMessage);
+            
+            
+            
 
-            removeReceivedPacketFromQueue (pTestData);
-            
-            testTime = GetMilliCount();
+             testTime = GetMilliCount();
         }
     }
 }
+
+// Need to create for multi data
+
 
 //----------------------------------------------------------------------------------
 void createNewAP (sTest * pTestData, DEVICE_ID apDeviceID)

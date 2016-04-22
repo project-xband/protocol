@@ -18,7 +18,7 @@
 #define HEARTBEAT_TIME 15000
 
 
-enum clientDeviceState {
+enum deviceState {
     DEVICE_NULL            = 0,
     DEVICE_OFFLINE         = 1,
     DEVICE_SEARCHING       = 2,

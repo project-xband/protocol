@@ -79,5 +79,5 @@ void processData (sTest* pTestData, DEVICE_ID receivingDeviceID, DEVICE_ID apDev
 void processMulti (sTest * pTestData, DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, BYTE messageFragmentLength, DWORD hash, WORD sequenceNumber, BYTE * pMessageBody);
 void processAck (sTest * pTestData, DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, DWORD hash, WORD sequenceNumber);
 
-
+void sendHeaderAndData (sTest * pTestData, BYTE * pMessage);
 #endif /* common_h */
