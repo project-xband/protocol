@@ -8,6 +8,10 @@
 
 #include "common.hpp"
 
+sManager * pSendManagerList;
+sManager * pReceiveManagerList;
+
+
 void processHeartbeat (sTest * pTestData, DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, BYTE receiveSignalStrength, BYTE deviceCount, DEVICE_ID * pArrayOfDeviceIDs)
 {
     packets heartBeatReplyPacket;
@@ -57,17 +61,19 @@ void processMulti (sTest * pTestData, DEVICE_ID receivingDeviceID, DEVICE_ID apD
 void processAck (sTest * pTestData, DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, DWORD hash, WORD sequenceNumber)
 {
 // once receive ack, then send multi if needed
+    sSendManager * pSendManager;
     
-    ;
+    listWalk (pSendManagerList, & pSendManager, hash, sourceDeviceID);
+    if (pSendManager != NULL)
+    {
+        pSendManager->sessionState = SEND_SESSION_SENT_MULTI;
+    }
 }
 
 
 
 //----------------------------------------------------------------------------------
 // setup and process send and receive message sessions
-
-sManager * pSendManagerList;
-sManager * pReceiveManagerList;
 
 void sManagerInit (void)
 {
@@ -131,10 +137,17 @@ void sendHeaderAndData (sTest * pTestData, BYTE * pMessage)
 }
 
 // process each portion of the send session state and transmit message fragments, receive acks and handle errors
-//void processSendSession (void)
 void processSendSession (sTest * pTestData, packets * packet, sSendManager * pSendManager)
 {
-    
+    packets        dataPacket;
+    DEVICE_ID      apDeviceID;
+    DEVICE_ID      destinationDeviceID;
+    DEVICE_ID      sourceDeviceID;
+    DWORD          hashValue;
+    BYTE           bytesSent;
+    WORD           sequenceNumber;
+    DWORD          messageLength;
+    BYTE         * pMessage;
     
     switch (pSendManager->sessionState) {
         case SEND_SESSION_NULL:
@@ -146,7 +159,21 @@ void processSendSession (sTest * pTestData, packets * packet, sSendManager * pSe
             break;
             
         case SEND_SESSION_SENT_MULTI:
-            ;
+            
+            CopyDeviceID (& apDeviceID, pSendManager->apDeviceID);
+            CopyDeviceID (& destinationDeviceID, pSendManager->destinationDeviceID);
+            CopyDeviceID (& sourceDeviceID, pSendManager->sourceDeviceID);
+            hashValue      = pSendManager->hash;
+            messageLength  = pSendManager->messageTotalLength;
+            bytesSent      = pSendManager->messageFragmentLength;
+            sequenceNumber = pSendManager->sequenceNumber++;
+            pMessage       = pSendManager->pMessageBody;
+            
+            pMessage = pMessage + (sequenceNumber * MAX_MESSAGE_LENGTH);
+            
+            sendData(& dataPacket, apDeviceID, destinationDeviceID, sourceDeviceID, messageLength, &hashValue, pMessage, &bytesSent);
+            
+            transmitPacket(pTestData, & dataPacket);
             break;
             
         case SEND_SESSION_WAITING_FOR_ACK:
@@ -180,10 +207,10 @@ void sentFullMessage (void)
 void receiveHeaderAndData (sTest * pTestData, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, DWORD messageTotalLength, BYTE messageFragmentLength, DWORD hash, BYTE * pMessageBody)
 {
     packets AckPacket;
+    
     sendDataAck (& AckPacket, apDeviceID, destDeviceID, sourceDeviceID, hash, 0);
     
     transmitPacket(pTestData, & AckPacket);
-
 }
 
 
@@ -253,9 +280,11 @@ int listDeleteNode (sManager * * ppManagerList, sManager * pManagerToDelete)
 }
 
 
-void listWalk (sManager * pManagerList)
+void listWalk (sManager * pManagerList, sSendManager * * ppSendManager, DWORD hash, DEVICE_ID sourceID)
 {
     sManager * pTemp;
+    
+    * ppSendManager = NULL;
     
     pTemp = pManagerList;
     if (pTemp == NULL)
@@ -264,12 +293,16 @@ void listWalk (sManager * pManagerList)
     }
     while (pTemp != NULL)
     {
-//        printf ("%d ", pTemp->puManager);
-        
-        
+        if (hash == pTemp->puManager->pSendManagerList.hash)
+        {
+            if (CompareDeviceID(sourceID, pTemp->puManager->pSendManagerList.sourceDeviceID))
+            {
+                * ppSendManager = & pTemp->puManager->pSendManagerList;
+                return;
+            }
+        }
         pTemp = pTemp->pNextManager;
     }
-    printf("\n");
 }
 
 

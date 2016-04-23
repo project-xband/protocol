@@ -71,8 +71,8 @@ typedef struct sManager_t
 
 
 void listAppendNode (sManager * * ppManagerList, sManager * pNewManager);
-int  listDeleteNode (sManager * * pppManagerList, sManager * pManagerToDelete);
-void listWalk (sManager * pManagerList);
+int  listDeleteNode (sManager * * ppManagerList, sManager * pManagerToDelete);
+void listWalk (sManager * pManagerList, sSendManager * * ppSendManager, DWORD hash, DEVICE_ID sourceID);
 int  listLength (sManager * pManagerList);
 
 
