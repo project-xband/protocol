@@ -71,6 +71,16 @@ uint32_t GetMilliSpan (uint32_t nTimeStart);
 //----------------------------------------------------------------------------------
 // interface.cpp function prototypes
 
+
+void getDeviceInfo (sDeviceInfo * pDeviceInfo);
+void getRegionInfo (sRegionInfo * pRegionInfo);
+void registerWithAp (void);
+void unregisterWithAp (void);
+void sendMessageCallBack (void);
+void sendMessage (sMessage * pMessage, void (* pCallBackFunction)() );
+void checkForMessages (sMessage * pMessage);
+
+
 void processHeartbeat (sTest * pTestData, DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, BYTE receiveSignalStrength, BYTE deviceCount, DEVICE_ID * pArrayOfDeviceIDs);
 void processHeartbeatReply (sTest * pTestData, DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID clDeviceID, BYTE receiveSignalStrength);
 void processRegistration (sTest * pTestData, DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID clDeviceID);

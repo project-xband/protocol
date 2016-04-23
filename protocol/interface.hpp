@@ -10,18 +10,57 @@
 #define interface_hpp
 
 
-enum sendSessionStates {
-    
-    SEND_SESSION_NULL            = 0,
-    SEND_SESSION_SENT_HEADER     = 1,
-    SEND_SESSION_SENT_MULTI      = 2,
-    SEND_SESSION_WAITING_FOR_ACK = 3,
-    SEND_SESSION_SENT_IT_ALL     = 4,
-    SEND_SESSION_CALLED_APP_CODE = 5,
-    SEND_SESSION_WAITING_TO_END  = 6
+enum deviceRoles
+{
+    ROLE_NULL         = 0,
+    ROLE_CLIENT       = 1,
+    ROLE_ACCESS_POINT = 2
 };
 
-enum receiveSessionStates {
+typedef struct sDeviceInfo_t
+{
+    BYTE deviceTypeID;
+    BYTE DeviceVersion;
+    BYTE deviceRole;
+    BYTE deviceState;
+    DEVICE_ID myDeviceID;
+    DEVICE_ID apDeviceID;
+} sDeviceInfo;
+
+typedef struct sRegionInfo_t
+{
+    BYTE deviceRole;
+    union
+    {
+        DEVICE_ID apDeviceID;
+        DEVICE_ID clDeviceID;
+    } uDeviceID;
+    struct sRegionInfo_t * pNextRegionInfo;
+} sRegionInfo;
+
+typedef struct sMessage_t
+{
+    DEVICE_ID destinationDeviceID;
+    DEVICE_ID sourceDeviceID;
+    WORD      messageTotalLength;
+    BYTE    * pMessageBody;
+} sMessage;
+
+
+enum sendSessionStates
+{
+    SEND_SESSION_NULL                   = 0,
+    SEND_SESSION_SENT_HEADER            = 1,
+    SEND_SESSION_WAITING_FOR_HEADER_ACK = 2,
+    SEND_SESSION_SENT_MULTI             = 3,
+    SEND_SESSION_WAITING_FOR_MULTI_ACK  = 4,
+    SEND_SESSION_SENT_IT_ALL            = 5,
+    SEND_SESSION_CALLED_APP_CODE        = 6,
+    SEND_SESSION_WAITING_TO_END         = 7
+};
+
+enum receiveSessionStates
+{
     RECEIVE_SESSION_NULL            = 0,
     RECEIVE_SESSION_GOT_HEADER      = 1,
     RECEIVE_SESSION_GOT_MULTI       = 2,

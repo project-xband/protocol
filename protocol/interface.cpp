@@ -71,19 +71,13 @@ void processAck (sTest * pTestData, DEVICE_ID receivingDeviceID, DEVICE_ID apDev
 }
 
 
-
 //----------------------------------------------------------------------------------
 // setup and process send and receive message sessions
 
 void sManagerInit (void)
 {
-    pSendManagerList    = (sManager *) malloc (sizeof(sManager));
-    pReceiveManagerList = (sManager *) malloc (sizeof(sManager));
-    
-    pSendManagerList->pNextManager    = NULL;
-    pSendManagerList->puManager       = NULL;
-    pReceiveManagerList->pNextManager = NULL;
-    pReceiveManagerList->puManager    = NULL;
+    pSendManagerList    = NULL;
+    pReceiveManagerList = NULL;
 }
 
 // setup a send message session
@@ -103,35 +97,29 @@ void sendHeaderAndData (sTest * pTestData, BYTE * pMessage)
     CopyDeviceID (& destinationDeviceID, pTestData->clientDeviceIDs[0].myDeviceID);
     CopyDeviceID (& sourceDeviceID, pTestData->clientDeviceIDs[1].myDeviceID);
     
-    messageLength = strlen((const char *)pMessage);
+    messageLength = (DWORD) strlen((const char *)pMessage);
 
     sendData(& dataPacket, apDeviceID, destinationDeviceID, sourceDeviceID, messageLength, &hashValue, pMessage, &bytesSent);
 
 // NTR:  check for allocator failure
     
-    if (messageLength > bytesSent)
-    {
-        pManager     = (sManager *)malloc(sizeof(sManager));
-        pSendManager = (sSendManager *)malloc(sizeof(sSendManager));
+    pManager     = (sManager *)malloc(sizeof(sManager));
+    pSendManager = (sSendManager *)malloc(sizeof(sSendManager));
     
-        pManager->puManager = (uMessageManager *) pSendManager;
+    pManager->puManager = (uMessageManager *) pSendManager;
     
-        listAppendNode (& pSendManagerList, pManager);
+    listAppendNode (& pSendManagerList, pManager);
     
-        pSendManager->sessionState          = SEND_SESSION_SENT_HEADER;
-        CopyDeviceID (& pSendManager->apDeviceID,          apDeviceID);
-        CopyDeviceID (& pSendManager->destinationDeviceID, destinationDeviceID);
-        CopyDeviceID (& pSendManager->sourceDeviceID,      sourceDeviceID);
-        pSendManager->hash                  = hashValue;
-        pSendManager->messageTotalLength    = messageLength;
-        pSendManager->messageFragmentLength = bytesSent;
-        pSendManager->sequenceNumber        = 0;
-        pSendManager->pMessageBody          = pMessage;
-    }
-    else
-    {
-        ;   // full message sent in a single packet
-    }
+    pSendManager->sessionState          = SEND_SESSION_WAITING_FOR_HEADER_ACK;
+    
+    CopyDeviceID (& pSendManager->apDeviceID,          apDeviceID);
+    CopyDeviceID (& pSendManager->destinationDeviceID, destinationDeviceID);
+    CopyDeviceID (& pSendManager->sourceDeviceID,      sourceDeviceID);
+    pSendManager->hash                  = hashValue;
+    pSendManager->messageTotalLength    = messageLength;
+    pSendManager->messageFragmentLength = bytesSent;
+    pSendManager->sequenceNumber        = 0;
+    pSendManager->pMessageBody          = pMessage;
     
     transmitPacket(pTestData, & dataPacket);
 }
@@ -158,8 +146,13 @@ void processSendSession (sTest * pTestData, packets * packet, sSendManager * pSe
             ;
             break;
             
-        case SEND_SESSION_SENT_MULTI:
+        case SEND_SESSION_WAITING_FOR_HEADER_ACK:
+            ;
+            break;
             
+        case SEND_SESSION_SENT_MULTI:
+            pSendManager->sessionState = SEND_SESSION_WAITING_FOR_MULTI_ACK;
+
             CopyDeviceID (& apDeviceID, pSendManager->apDeviceID);
             CopyDeviceID (& destinationDeviceID, pSendManager->destinationDeviceID);
             CopyDeviceID (& sourceDeviceID, pSendManager->sourceDeviceID);
@@ -175,8 +168,8 @@ void processSendSession (sTest * pTestData, packets * packet, sSendManager * pSe
             
             transmitPacket(pTestData, & dataPacket);
             break;
-            
-        case SEND_SESSION_WAITING_FOR_ACK:
+        
+        case SEND_SESSION_WAITING_FOR_MULTI_ACK:
             ;
             break;
             
@@ -238,6 +231,12 @@ void listAppendNode (sManager * * ppManagerList, sManager * pNewManager)
     
     pRight = * ppManagerList;
     
+    if (pRight == NULL)
+    {
+        *ppManagerList = pNewManager;
+        return;
+    }
+    
     while ( pRight->pNextManager != NULL )
         pRight = pRight->pNextManager;
     
@@ -249,7 +248,7 @@ void listAppendNode (sManager * * ppManagerList, sManager * pNewManager)
 int listDeleteNode (sManager * * ppManagerList, sManager * pManagerToDelete)
 {
     sManager * pTemp;
-    sManager * pPrev;
+    sManager * pPrev = nullptr;
     
     pTemp = * ppManagerList;
     
@@ -265,7 +264,7 @@ int listDeleteNode (sManager * * ppManagerList, sManager * pManagerToDelete)
             }
             else
             {
-                pPrev->pNextManager = pTemp->pNextManager;
+                pPrev->pNextManager = pTemp->pNextManager;  // ignore warning about pPrev maybe not be set before use
                 free( pTemp );
                 return 1;
             }

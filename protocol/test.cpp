@@ -85,20 +85,18 @@ void testRun (sTest * pTestData)
  
             sendHeaderAndData (pTestData, pMessage);
             
-            WORD apIndex;
             for (apIndex = 0; apIndex < pTestData->accessPointDeviceCount; apIndex++)
             {
                 receiveAccessPointPacket(pTestData, apIndex);
             }
             
-            WORD clIndex;
             for (clIndex = 0; clIndex < pTestData->clientDeviceCount; clIndex++)
             {
                 receiveClientPacket(pTestData, clIndex);
             }
 
             // reset packet queue to empty
-            pTestData->transmittedPacketQueueDepth = 0;
+//            pTestData->transmittedPacketQueueDepth = 0;
             
 //            removeReceivedPacketFromQueue (pTestData);
 
@@ -142,6 +140,7 @@ void createNewClient (sTest * pTestData, DEVICE_ID myDeviceID)
     pTestData->clientStartingID++;
     pTestData->clientDeviceCount++;
 }
+
 
 // from each AP, send a heartbeat packet periodically
 void sendHeartbeats (sTest * pTestData)
