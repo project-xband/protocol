@@ -12,115 +12,63 @@ extern DEVICE_ID nullDeviceID;
 
 extern sTest * pTestData;
 
+//sDeviceInfo * pDevices[10];
+//WORD          deviceCount;
+
 sManager * pSendManagerList;
 sManager * pReceiveManagerList;
 
 
 //----------------------------------------------------------------------------------
 
-sDeviceInfo * initializeDeviceInfo (DEVICE_ID accessPointDeviceID, DEVICE_ID deviceID, BYTE initialDeviceRole)
+void getDeviceInfo (sDeviceInfo * pDeviceInfo)
 {
-    sDeviceInfo * pDeviceInfo;
-
-    if (NULL == (pDeviceInfo = (sDeviceInfo *) malloc (sizeof(sDeviceInfo)) ) )
-        return (NULL);
-    
-    pDeviceInfo->pRegionDeviceInfo = NULL;
-    
-    CopyDeviceID (& pDeviceInfo->myDeviceID, deviceID);
-    CopyDeviceID (& pDeviceInfo->accessPointDeviceID, accessPointDeviceID);
-    
-    pDeviceInfo->heartbeatLastTime = 0;
-    
-    pDeviceInfo->deviceTypeID  = 1;
-    pDeviceInfo->DeviceVersion = 1;
-    pDeviceInfo->deviceRole    = initialDeviceRole;
-    pDeviceInfo->deviceState   = DEVICE_INITIALIZED;
-    
-    return (pDeviceInfo);
-}
-
-void runDeviceStateMachine (sDeviceInfo * pDeviceInfo)
-{
-    packets heartbeatPacket;
-    
-    if (pDeviceInfo->deviceRole == ROLE_ACCESS_POINT)
-    {
-        if ((pDeviceInfo->heartbeatLastTime + 15000) > GetMilliCount() )
-        {
-            sendHeartbeat(& heartbeatPacket, pDeviceInfo->myDeviceID, 0, nullptr);
-            transmitPacket (& heartbeatPacket);
-        }
-        
-    }
-}
-
-
-// transmit a packet from a device
-void transmitPacket (packets * packet)
-{
-#ifdef DEVICE_DEBUG
-    if ((MAX_PACKETS_IN_QUEUE - 1) > pTestData->transmittedPacketQueueDepth)
-    {
-        memcpy ((void *)(& pTestData->transmittedPackets[pTestData->transmittedPacketQueueDepth]), (const void *)packet, sizeof(packets) );
-        pTestData->transmittedPacketQueueDepth++;
-    } else {
-        printf("ERROR: Dropping transmitted packet due to testing queue being full\n");
-    }
-#else
     ;
-#endif
 }
-
-// receive a packet from a device
-void receivePacket (void)
+void getRegionDeviceInfo (sDeviceInfo * pDeviceInfo, sRegionDeviceInfo * pRegionDeviceInfo)
 {
-#ifdef DEVICE_DEBUG
-    WORD index;
-    
-// iterate through all devices, allowing them to decode and act upon the packet
-    if (0 < pTestData->transmittedPacketQueueDepth)
-    {
-        for (index = 0; index < pTestData->deviceCount; index++)
-        {
-            recPacket (& pTestData->transmittedPackets[0], pTestData->deviceInfo[index]->myDeviceID);
-        }
-        removeFirstPacketFromQueue ();
-    }
-#else
     ;
-#endif
 }
-
-void removeFirstPacketFromQueue (void)
+void registerWithAp (sDeviceInfo * pDeviceInfo, DEVICE_ID apDeviceID)  // void (* pRegisterCallBackFunction)() )
 {
-#ifdef DEVICE_DEBUG
-    if (0 == pTestData->transmittedPacketQueueDepth)
-    {
-        printf ("ERROR: attempting to remove transmitted packet from empty buffer\n");
-        return;
-    }
-    
-    if (1 < pTestData->transmittedPacketQueueDepth)
-    {
-        memcpy (& pTestData->transmittedPackets[0], & pTestData->transmittedPackets[1], sizeof(packets) * pTestData->transmittedPacketQueueDepth - 1);
-    }
-    pTestData->transmittedPacketQueueDepth--;
-#endif
+    ;
 }
-
+void unregisterWithAp (sDeviceInfo * pDeviceInfo, DEVICE_ID apDeviceID)  // void (* pUnregisterCallBackFunction)() )
+{
+    ;
+}
+void registerRequest (sDeviceInfo * pDeviceInfo, DEVICE_ID apDeviceID)  // void (* pRegisterRequestCallBackFunction)() )
+{
+    ;
+}
+void unregisterRequest (sDeviceInfo * pDeviceInfo, DEVICE_ID apDeviceID)  // void (* pUnregisterRequestCallBackFunction)() )
+{
+    ;
+}
+void sendMessage (sDeviceInfo * pDeviceInfo, DEVICE_ID destinationDeviceID, BYTE * pMessageBody)  // void (* pSendMessageCallBackFunction)() )
+{
+    sendHeaderAndData (pDeviceInfo, destinationDeviceID, pMessageBody);
+}
+void sendMessageCallBack (sDeviceInfo * pDeviceInfo, sMessage * pMessage)
+{
+    ;
+}
+void getMessage (sDeviceInfo * pDeviceInfo, sMessage * pMessage)
+{
+    ;
+}
 
 
 //----------------------------------------------------------------------------------
-
+// process all types of received packet types
 void processHeartbeat (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, BYTE receiveSignalStrength, BYTE deviceCount, DEVICE_ID * pArrayOfDeviceIDs)
 {
     packets heartBeatReplyPacket;
     
     if ( ! CompareDeviceID (receivingDeviceID, apDeviceID) )
     {
-        sendHeartbeatReply (& heartBeatReplyPacket, apDeviceID, receivingDeviceID, rand() % 10); // Make a packet
-        transmitPacket(& heartBeatReplyPacket); // Then send
+        sendHeartbeatReply (& heartBeatReplyPacket, apDeviceID, receivingDeviceID, rand() % 10);
+        transmitPacket(& heartBeatReplyPacket); 
     }
 }
 
@@ -133,41 +81,47 @@ void processHeartbeatReply (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, D
     }
 }
 
-
 void processRegistration (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID clDeviceID)
 {
     ;
 }
 
-void processRegistrationReply (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID clDeviceID, BYTE internetConnected)
+void processRegistrationReply (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID clDeviceID, BYTE * pInternetConnected)
 {
     ;
 }
 
-void processData (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, DWORD messageTotalLength, BYTE messageFragmentLength, DWORD hash, BYTE * pMessageBody)
+void processData (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID destinationDeviceID, DEVICE_ID sourceDeviceID,
+                  DWORD messageTotalLength, BYTE messageFragmentLength, DWORD hash, BYTE * pMessageBody)
 {
-    // deal with AP target data versus other client data target
-    if ( CompareDeviceID (receivingDeviceID, apDeviceID) )
+    if ( (CompareDeviceID (receivingDeviceID, apDeviceID)) || (CompareDeviceID(receivingDeviceID, destinationDeviceID)) )
     {
-        printf("message received ==> %s\n", pMessageBody);
-        receiveHeaderAndData (apDeviceID, destDeviceID, sourceDeviceID, messageTotalLength, messageFragmentLength, hash, pMessageBody);
+        receiveHeaderAndData(apDeviceID, destinationDeviceID, sourceDeviceID, messageTotalLength, messageFragmentLength, hash, pMessageBody);
     }
 }
 
-void processMulti (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, BYTE messageFragmentLength, DWORD hash, WORD sequenceNumber, BYTE * pMessageBody)
+
+void processMulti (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID destinationDeviceID, DEVICE_ID sourceDeviceID,
+                   BYTE messageFragmentLength, DWORD hash, WORD sequenceNumber, BYTE * pMessageBody)
 {
-    ;
+    if ( (CompareDeviceID (receivingDeviceID, apDeviceID)) || (CompareDeviceID(receivingDeviceID, destinationDeviceID)) )
+    {        
+        receiveSessionData (apDeviceID, destinationDeviceID, sourceDeviceID, messageFragmentLength, hash, sequenceNumber, pMessageBody);
+    }
 }
 
-void processAck (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, DWORD hash, WORD sequenceNumber)
+void processAck (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID destinationDeviceID, DEVICE_ID sourceDeviceID,
+                 DWORD hash, WORD sequenceNumber)
 {
-// once receive ack, then send multi if needed
     sSendManager * pSendManager;
     
-    listWalk (pSendManagerList, & pSendManager, hash, sourceDeviceID);
-    if (pSendManager != NULL)
+    if ( (CompareDeviceID (receivingDeviceID, apDeviceID)) || (CompareDeviceID(receivingDeviceID, sourceDeviceID)) )
     {
-        pSendManager->sessionState = SEND_SESSION_SENT_MULTI;
+        listWalkSendManager (pSendManagerList, & pSendManager, hash, sourceDeviceID);
+        if (pSendManager != NULL)
+        {
+            sendSessionData (pSendManager);
+        }
     }
 }
 
@@ -180,6 +134,7 @@ void sManagerInit (void)
     pSendManagerList    = NULL;
     pReceiveManagerList = NULL;
 }
+
 
 // setup a send message session
 void sendHeaderAndData (sDeviceInfo * pDeviceInfo, DEVICE_ID destinationDeviceID, BYTE * pMessage)
@@ -196,15 +151,12 @@ void sendHeaderAndData (sDeviceInfo * pDeviceInfo, DEVICE_ID destinationDeviceID
     sendData(& dataPacket, pDeviceInfo->accessPointDeviceID, destinationDeviceID, pDeviceInfo->myDeviceID, messageLength, &hashValue, pMessage, &bytesSent);
 
 // NTR:  check for allocator failure
-    
     pManager     = (sManager *)malloc(sizeof(sManager));
     pSendManager = (sSendManager *)malloc(sizeof(sSendManager));
     
     pManager->puManager = (uMessageManager *) pSendManager;
     
     listAppendNode (& pSendManagerList, pManager);
-    
-    pSendManager->sessionState          = SEND_SESSION_WAITING_FOR_HEADER_ACK;
     
     CopyDeviceID (& pSendManager->apDeviceID,          pDeviceInfo->accessPointDeviceID);
     CopyDeviceID (& pSendManager->destinationDeviceID, destinationDeviceID);
@@ -215,50 +167,54 @@ void sendHeaderAndData (sDeviceInfo * pDeviceInfo, DEVICE_ID destinationDeviceID
     pSendManager->sequenceNumber        = 0;
     pSendManager->pMessageBody          = pMessage;
     
+    if (bytesSent < messageLength)
+    {
+        pSendManager->sessionState = SEND_SESSION_WAITING_FOR_HEADER_ACK;
+    } else {
+        pSendManager->sessionState = SEND_SESSION_WAITING_FOR_COMPLETE_ACK;
+    }
+    
     transmitPacket(& dataPacket);
 }
 
+
 // process each portion of the send session state and transmit message fragments, receive acks and handle errors
-void processSendSession (packets * packet, sSendManager * pSendManager)
+void sendSessionData (sSendManager * pSendManager)
 {
     packets        dataPacket;
     DEVICE_ID      apDeviceID;
     DEVICE_ID      destinationDeviceID;
     DEVICE_ID      sourceDeviceID;
     DWORD          hashValue;
-    BYTE           bytesSent;
     WORD           sequenceNumber;
-    DWORD          messageLength;
+    DWORD          messageTotalLength;
+    BYTE           messageFragmentLength;
+    DWORD          messageSendOffset;
     BYTE         * pMessage;
     
     switch (pSendManager->sessionState) {
-        case SEND_SESSION_NULL:
-            ;
-            break;
-            
-        case SEND_SESSION_SENT_HEADER:
-            ;
-            break;
-            
         case SEND_SESSION_WAITING_FOR_HEADER_ACK:
-            ;
-            break;
-            
-        case SEND_SESSION_SENT_MULTI:
-            pSendManager->sessionState = SEND_SESSION_WAITING_FOR_MULTI_ACK;
-
             CopyDeviceID (& apDeviceID, pSendManager->apDeviceID);
             CopyDeviceID (& destinationDeviceID, pSendManager->destinationDeviceID);
             CopyDeviceID (& sourceDeviceID, pSendManager->sourceDeviceID);
-            hashValue      = pSendManager->hash;
-            messageLength  = pSendManager->messageTotalLength;
-            bytesSent      = pSendManager->messageFragmentLength;
-            sequenceNumber = pSendManager->sequenceNumber++;
-            pMessage       = pSendManager->pMessageBody;
+            hashValue             = pSendManager->hash;
+            messageTotalLength    = pSendManager->messageTotalLength;
+            messageFragmentLength = pSendManager->messageFragmentLength;
+            sequenceNumber      = ++pSendManager->sequenceNumber;
+            pMessage              = pSendManager->pMessageBody;
             
-            pMessage = pMessage + (sequenceNumber * MAX_MESSAGE_LENGTH);
+            messageSendOffset     = sequenceNumber * MAX_MESSAGE_LENGTH;
+            messageTotalLength   -= messageSendOffset;
+            pMessage              = pMessage + messageSendOffset;
             
-            sendData(& dataPacket, apDeviceID, destinationDeviceID, sourceDeviceID, messageLength, &hashValue, pMessage, &bytesSent);
+            sendMulti (& dataPacket, apDeviceID, destinationDeviceID, sourceDeviceID, messageTotalLength, hashValue, sequenceNumber, pMessage, & messageFragmentLength);
+            
+            if (messageFragmentLength < messageTotalLength)
+            {
+                pSendManager->sessionState = SEND_SESSION_WAITING_FOR_MULTI_ACK;
+            } else {
+                pSendManager->sessionState = SEND_SESSION_WAITING_FOR_COMPLETE_ACK;
+            }
             
             transmitPacket(& dataPacket);
             break;
@@ -267,7 +223,7 @@ void processSendSession (packets * packet, sSendManager * pSendManager)
             ;
             break;
             
-        case SEND_SESSION_SENT_IT_ALL:
+        case SEND_SESSION_WAITING_FOR_COMPLETE_ACK:
             ;
             break;
             
@@ -275,7 +231,7 @@ void processSendSession (packets * packet, sSendManager * pSendManager)
             ;
             break;
             
-        case SEND_SESSION_WAITING_TO_END:
+        case SEND_SESSION_WAITING_FOR_APP_TO_END:
             ;
             break;
             
@@ -284,40 +240,95 @@ void processSendSession (packets * packet, sSendManager * pSendManager)
     }
 }
 
+
 // call Client or Access Point application code when the message has been completely sent
 void sentFullMessage (void)
 {
     ;
 }
 
+
 // setup a receive message session
-void receiveHeaderAndData (DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, DWORD messageTotalLength, BYTE messageFragmentLength, DWORD hash, BYTE * pMessageBody)
+void receiveHeaderAndData (DEVICE_ID apDeviceID, DEVICE_ID destinationDeviceID, DEVICE_ID sourceDeviceID, DWORD messageTotalLength, BYTE messageFragmentLength, DWORD hash, BYTE * pMessageBody)
 {
-    packets AckPacket;
+    packets           ackPacket;
+    sManager        * pManager;
+    sReceiveManager * pReceiveManager;
+
+// NTR:  check for allocator failure
+    pManager        = (sManager *)malloc(sizeof(sManager));
+    pReceiveManager = (sReceiveManager *)malloc(sizeof(sReceiveManager));
     
-    sendDataAck (& AckPacket, apDeviceID, destDeviceID, sourceDeviceID, hash, 0);
+    pManager->puManager = (uMessageManager *) pReceiveManager;
     
-    transmitPacket(& AckPacket);
+    listAppendNode (& pReceiveManagerList, pManager);
+    
+    CopyDeviceID (& pReceiveManager->apDeviceID,          apDeviceID);
+    CopyDeviceID (& pReceiveManager->destinationDeviceID, destinationDeviceID);
+    CopyDeviceID (& pReceiveManager->sourceDeviceID,      sourceDeviceID);
+    pReceiveManager->hash                  = hash;
+    pReceiveManager->messageTotalLength    = messageTotalLength;
+    pReceiveManager->messageFragmentLength = messageFragmentLength;
+    pReceiveManager->sequenceNumber        = 0;
+    pReceiveManager->pMessageBody          = pMessageBody;
+    
+    if (messageFragmentLength == messageTotalLength)
+    {
+        pReceiveManager->sessionState = RECEIVE_SESSION_GOT_IT_ALL;
+    } else {
+        pReceiveManager->sessionState = RECEIVE_SESSION_GET_MULTI;
+    }
+
+    printf ("Message Head => %s\n", pMessageBody);
+    memcpy (pReceiveManager->pMessageBody, pMessageBody, messageFragmentLength);
+    
+    sendDataAck (& ackPacket, apDeviceID, destinationDeviceID, sourceDeviceID, hash, 0);
+    
+    transmitPacket(& ackPacket);
 }
 
 
 // process each portion of the receive session state and receive message fragments, send acks and handle timeout errors waiting for new message fragments
-void processReceiveSession (void)
+void receiveSessionData (DEVICE_ID apDeviceID, DEVICE_ID destinationDeviceID, DEVICE_ID sourceDeviceID, BYTE messageFragmentLength, DWORD hash, WORD sequenceNumber, BYTE * pMessageBody)
 {
-    ;
+    sReceiveManager * pReceiveManager;
+    packets ackPacket;
+    DWORD   messageTotalLength;
+    DWORD   messageSendOffset;
+    
+    listWalkReceiveManager (pReceiveManagerList, & pReceiveManager, hash, sourceDeviceID);
+    if (pReceiveManager == NULL)
+    {
+        printf ("ERROR: received a packet that did not match to a session, dropping it\n");
+    }
+    
+    messageTotalLength = pReceiveManager->messageTotalLength;
+    messageSendOffset = sequenceNumber * MAX_MESSAGE_LENGTH;
+    
+    if (messageTotalLength == (messageSendOffset + messageFragmentLength) )
+    {
+        pReceiveManager->sessionState = RECEIVE_SESSION_GOT_IT_ALL;
+    }
+    
+    printf ("Message Multi => %s\n", pMessageBody);
+    memcpy (pReceiveManager->pMessageBody + messageSendOffset, pMessageBody, messageFragmentLength);
+
+    sendDataAck (& ackPacket, apDeviceID, destinationDeviceID, sourceDeviceID, hash, sequenceNumber);
+    
+    transmitPacket(& ackPacket);
 }
+
 
 // call Client or Access Point application code when the message has been completely received
 void receivedFullMessage (void)
 {
-    
     ;
 }
 
 
 
 //----------------------------------------------------------------------------------
-// from: http://www.cprogramming.com/snippets/source-code/singly-linked-list-insert-remove-add-count
+// the basis is from: http://www.cprogramming.com/snippets/source-code/singly-linked-list-insert-remove-add-count
 
 void listAppendNode (sManager * * ppManagerList, sManager * pNewManager)
 {
@@ -352,7 +363,7 @@ int listDeleteNode (sManager * * ppManagerList, sManager * pManagerToDelete)
         {
             if (  pTemp == * ppManagerList)
             {
-                * ppManagerList = pTemp->pNextManager;
+                * ppManagerList = pTemp->pNextManager;  // if pTemp is the only node, the list head is set to NULL here
                 free ( pTemp );
                 return 1;
             }
@@ -373,7 +384,7 @@ int listDeleteNode (sManager * * ppManagerList, sManager * pManagerToDelete)
 }
 
 
-void listWalk (sManager * pManagerList, sSendManager * * ppSendManager, DWORD hash, DEVICE_ID sourceID)
+void listWalkSendManager (sManager * pManagerList, sSendManager * * ppSendManager, DWORD hash, DEVICE_ID sourceID)
 {
     sManager * pTemp;
     
@@ -391,6 +402,32 @@ void listWalk (sManager * pManagerList, sSendManager * * ppSendManager, DWORD ha
             if (CompareDeviceID(sourceID, pTemp->puManager->pSendManagerList.sourceDeviceID))
             {
                 * ppSendManager = & pTemp->puManager->pSendManagerList;
+                return;
+            }
+        }
+        pTemp = pTemp->pNextManager;
+    }
+}
+
+
+void listWalkReceiveManager (sManager * pManagerList, sReceiveManager * * ppReceiveManager, DWORD hash, DEVICE_ID sourceID)
+{
+    sManager * pTemp;
+    
+    * ppReceiveManager = NULL;
+    
+    pTemp = pManagerList;
+    if (pTemp == NULL)
+    {
+        return;
+    }
+    while (pTemp != NULL)
+    {
+        if (hash == pTemp->puManager->pReceiveManagerList.hash)
+        {
+            if (CompareDeviceID(sourceID, pTemp->puManager->pReceiveManagerList.sourceDeviceID))
+            {
+                * ppReceiveManager = & pTemp->puManager->pReceiveManagerList;
                 return;
             }
         }

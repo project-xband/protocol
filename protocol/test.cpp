@@ -11,6 +11,9 @@
 
 extern DEVICE_ID nullDeviceID;
 
+extern sManager * pSendManagerList;
+extern sManager * pReceiveManagerList;
+
 sTest * pTestData;
 
 
@@ -26,6 +29,7 @@ void test (void)
 void testInit (void)
 {
     protocolInitialize ();
+    sManagerInit ();
     
     pTestData = (sTest *) malloc (sizeof(sTest));
     
@@ -59,19 +63,22 @@ void testRun (void)
     {
         if ((pTestData->testTime + 1000) < GetMilliCount() )
         {
-            testStepSimulation ();
-
+            pTestData->testTime = GetMilliCount();
+            
 // create additional devices and scheduled events and cause various device states to occur
-
-// ADD CODE HERE ...
+//-------------------------
+// ADD TEST CODE HERE ...
             
             BYTE pMessage[] = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
  
-            sendHeaderAndData (pTestData->deviceInfo[1], apDeviceID, pMessage);
+            sendMessage (pTestData->deviceInfo[1], apDeviceID, pMessage);
 
 
             
-            pTestData->testTime = GetMilliCount();
+// END OF TEST CODE SECTION
+//-------------------------
+
+            testStepSimulation ();
         }
     }
 }
@@ -80,8 +87,16 @@ void testRun (void)
 //----------------------------------------------------------------------------------
 void testStepSimulation (void)
 {
+// run receive until no sessions or transmitted packets are still in the transmit queue
 
     receivePacket ();
-    receivePacket ();
+    runDeviceStateMachine ();
+// NTR when session managers are deleted, enable checking 
+    while ((0 < pTestData->transmittedPacketQueueDepth) )
+//        || (NULL != pSendManagerList) || (NULL != pReceiveManagerList) )
+    {
+        receivePacket ();
+        runDeviceStateMachine ();
+    }
 }
 

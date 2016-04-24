@@ -30,6 +30,7 @@
 
 
 #include "protocol.hpp"
+#include "device.hpp"
 #include "interface.hpp"
 #include "test.hpp"
 
@@ -47,7 +48,7 @@ void sendData (packets * pDataPacket, DEVICE_ID apDeviceID, DEVICE_ID destDevice
 void sendMulti (packets * pMultiPacket, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, WORD messageLength, DWORD hash, WORD sequenceNumber, BYTE * pMessageBody, BYTE * pMessageBytesSent);
 void sendDataAck (packets * pAckPacket, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, DWORD hash, WORD sequenceNumber);
 
-void recPacket (packets * newPacket, DEVICE_ID receivingDeviceID);
+void recPacket ( DEVICE_ID receivingDeviceID, packets * newPacket);
 
 void recHeartbeat  (packets * pHeartbeatPacket, DEVICE_ID * apDeviceID, BYTE * pReceiveSignalStrength, BYTE * deviceCount, DEVICE_ID * pArrayOfDeviceIDs);
 void recHeartbeatReply (packets * pHeartbeatReplyPacket, DEVICE_ID * apDeviceID, DEVICE_ID * clDeviceID, BYTE * pReceiveSignalStrength);
@@ -57,10 +58,7 @@ void recData (packets * pDataPacket, DEVICE_ID * apDeviceID, DEVICE_ID * destDev
 void recMultiData (packets * pMultiPacket, DEVICE_ID * apDeviceID, DEVICE_ID * destDeviceID, DEVICE_ID * sourceDeviceID, BYTE * messageFragmentLength, DWORD * hash, WORD * sequenceNumber, BYTE * pMessageBody);
 void recDataAck (packets * pAckPacket, DEVICE_ID * apDeviceID, DEVICE_ID * destDeviceID, DEVICE_ID * sourceDeviceID, DWORD * hash, WORD * sequenceNumber);
 
-void CreateDeviceID (DEVICE_ID * newDeviceID, DWORD value);
-BYTE CompareDeviceID (DEVICE_ID aDeviceID, DEVICE_ID bDeviceID);
-void CopyDeviceID (DEVICE_ID * pDestination, DEVICE_ID source);
-void CopyDeviceIDs (DEVICE_ID * pDestination, DEVICE_ID * pSource, BYTE count);
+
 DWORD generateHash (BYTE * pMessageBody, WORD messageLength);
 
 // from https://rosettacode.org/wiki/CRC-32#Implementation
@@ -70,26 +68,34 @@ uint32_t rc_crc32 (uint32_t crc, const char *buf, size_t len);
 uint32_t GetMilliCount (void);
 uint32_t GetMilliSpan (uint32_t nTimeStart);
 
+
 //----------------------------------------------------------------------------------
-// interface.cpp function prototypes
+// device.cpp function prototypes
 
 sDeviceInfo * initializeDeviceInfo (DEVICE_ID accessPointDeviceID, DEVICE_ID deviceID, BYTE initialDeviceRole);
-void runDeviceStateMachine (sDeviceInfo * pDeviceInfo);
+void runDeviceStateMachine (void);
 void transmitPacket (packets * packet);
 void receivePacket (void);
 void removeFirstPacketFromQueue (void);
 
+void CreateDeviceID (DEVICE_ID * newDeviceID, DWORD value);
+BYTE CompareDeviceID (DEVICE_ID aDeviceID, DEVICE_ID bDeviceID);
+void CopyDeviceID (DEVICE_ID * pDestination, DEVICE_ID source);
+void CopyDeviceIDs (DEVICE_ID * pDestination, DEVICE_ID * pSource, BYTE count);
 
+
+//----------------------------------------------------------------------------------
+// interface.cpp function prototypes
 void getDeviceInfo (sDeviceInfo * pDeviceInfo);
 void getRegionDeviceInfo (sDeviceInfo * pDeviceInfo, sRegionDeviceInfo * pRegionDeviceInfo);
 
-void registerWithAp (sDeviceInfo * pDeviceInfo, DEVICE_ID apDeviceID, void (* pRegisterCallBackFunction)() );
-void unregisterWithAp (sDeviceInfo * pDeviceInfo, DEVICE_ID apDeviceID, void (* pUnregisterCallBackFunction)() );
+void registerWithAp (sDeviceInfo * pDeviceInfo, DEVICE_ID apDeviceID);  // void (* pRegisterCallBackFunction)() );
+void unregisterWithAp (sDeviceInfo * pDeviceInfo, DEVICE_ID apDeviceID);  // void (* pUnregisterCallBackFunction)() );
 
-void registerRequest (sDeviceInfo * pDeviceInfo, DEVICE_ID apDeviceID, void (* pRegisterRequestCallBackFunction)() );
-void unregisterRequest (sDeviceInfo * pDeviceInfo, DEVICE_ID apDeviceID, void (* pUnregisterRequestCallBackFunction)() );
+void registerRequest (sDeviceInfo * pDeviceInfo, DEVICE_ID apDeviceID); // void (* pRegisterRequestCallBackFunction)() );
+void unregisterRequest (sDeviceInfo * pDeviceInfo, DEVICE_ID apDeviceID); // void (* pUnregisterRequestCallBackFunction)() );
 
-void sendMessage (sDeviceInfo * pDeviceInfo, sMessage * pMessage, void (* pSendMessageCallBackFunction)() );
+void sendMessage (sDeviceInfo * pDeviceInfo, DEVICE_ID destinationDeviceID, BYTE * pMessageBody); // void (* pSendMessageCallBackFunction)() );
 void sendMessageCallBack (sDeviceInfo * pDeviceInfo, sMessage * pMessage);
 
 void getMessage (sDeviceInfo * pDeviceInfo, sMessage * pMessage);
@@ -97,18 +103,22 @@ void getMessage (sDeviceInfo * pDeviceInfo, sMessage * pMessage);
 
 void processHeartbeat (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, BYTE receiveSignalStrength, BYTE deviceCount, DEVICE_ID * pArrayOfDeviceIDs);
 void processHeartbeatReply (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID clDeviceID, BYTE receiveSignalStrength);
+
 void processRegistration (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID clDeviceID);
-void processRegistrationReply (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID clDeviceID, BYTE internetConnected);
-void processData (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, DWORD messageTotalLength, BYTE messageFragmentLength, DWORD hash, BYTE * pMessageBody);
-void processMulti (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, BYTE messageFragmentLength, DWORD hash, WORD sequenceNumber, BYTE * pMessageBody);
-void processAck (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, DWORD hash, WORD sequenceNumber);
+void processRegistrationReply (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID clDeviceID, BYTE * pInternetConnected);
+
+void processData (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID destinationDeviceID, DEVICE_ID sourceDeviceID, DWORD messageTotalLength, BYTE messageFragmentLength, DWORD hash, BYTE * pMessageBody);
+void processMulti (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID destinationDeviceID, DEVICE_ID sourceDeviceID, BYTE messageFragmentLength, DWORD hash, WORD sequenceNumber, BYTE * pMessageBody);
+void processAck (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID destinationDeviceID, DEVICE_ID sourceDeviceID, DWORD hash, WORD sequenceNumber);
+
 
 void sManagerInit (void);
-void sendHeaderAndData (sDeviceInfo * pDeviceInfo, DEVICE_ID destinationDeviceID, BYTE * pMessage);
-void processSendSession (void);
+void sendHeaderAndData (sDeviceInfo * pDeviceInfo, DEVICE_ID destinationDeviceID, BYTE * pMessageBody);
+void sendSessionData (sSendManager * pSendManager);
 void sentFullMessage (void);
-void receiveHeaderAndData (DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, DWORD messageTotalLength, BYTE messageFragmentLength, DWORD hash, BYTE * pMessageBody);
-void processReceiveSession (void);
+
+void receiveHeaderAndData (DEVICE_ID apDeviceID, DEVICE_ID destinationDeviceID, DEVICE_ID sourceDeviceID, DWORD messageTotalLength, BYTE messageFragmentLength, DWORD hash, BYTE * pMessageBody);
+void receiveSessionData (DEVICE_ID apDeviceID, DEVICE_ID destinationDeviceID, DEVICE_ID sourceDeviceID, BYTE messageFragmentLength, DWORD hash, WORD sequenceNumber, BYTE * pMessageBody);
 void receivedFullMessage (void);
 
 #endif /* common_h */

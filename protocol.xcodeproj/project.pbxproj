@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FB7936071CCD4E4200326DDA /* device.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB7936051CCD4E4200326DDA /* device.cpp */; };
 		FB8106781CC5A75B002E1C2E /* interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB8106761CC5A75B002E1C2E /* interface.cpp */; };
 		FB9BAC871CC01245008221DC /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB9BAC861CC01245008221DC /* main.cpp */; };
 		FB9BAC8F1CC01282008221DC /* protocol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB9BAC8D1CC01282008221DC /* protocol.cpp */; };
@@ -26,6 +27,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		FB7936051CCD4E4200326DDA /* device.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = device.cpp; sourceTree = "<group>"; };
+		FB7936061CCD4E4200326DDA /* device.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = device.hpp; sourceTree = "<group>"; };
 		FB8106761CC5A75B002E1C2E /* interface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = interface.cpp; sourceTree = "<group>"; };
 		FB8106771CC5A75B002E1C2E /* interface.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = interface.hpp; sourceTree = "<group>"; };
 		FB97F10B1CC5CE830020CF58 /* common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = common.hpp; sourceTree = "<group>"; };
@@ -75,6 +78,8 @@
 				FBB06D121CC42D6C005AD861 /* test.hpp */,
 				FB8106761CC5A75B002E1C2E /* interface.cpp */,
 				FB8106771CC5A75B002E1C2E /* interface.hpp */,
+				FB7936051CCD4E4200326DDA /* device.cpp */,
+				FB7936061CCD4E4200326DDA /* device.hpp */,
 			);
 			path = protocol;
 			sourceTree = "<group>";
@@ -137,6 +142,7 @@
 			files = (
 				FB9BAC871CC01245008221DC /* main.cpp in Sources */,
 				FB9BAC8F1CC01282008221DC /* protocol.cpp in Sources */,
+				FB7936071CCD4E4200326DDA /* device.cpp in Sources */,
 				FBB06D131CC42D6C005AD861 /* test.cpp in Sources */,
 				FB8106781CC5A75B002E1C2E /* interface.cpp in Sources */,
 			);

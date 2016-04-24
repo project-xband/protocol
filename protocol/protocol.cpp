@@ -19,8 +19,6 @@ DEVICE_ID nullDeviceID;
 void protocolInitialize (void)
 {
     CreateDeviceID (& nullDeviceID, 0);
-    
-    sManagerInit ();
 }
 
 // access points (AP's) and repeaters send this packet periodically
@@ -100,7 +98,7 @@ void sendDataAck (packets * pAckPacket, DEVICE_ID apDeviceID, DEVICE_ID destDevi
 //----------------------------------------------------------------------------------
 // reception of packets starts here and dispatches to specific packet handlers
 // and then the protocol process logic and application interface
-void recPacket (packets * newPacket, DEVICE_ID receivingDeviceID)
+void recPacket (DEVICE_ID receivingDeviceID, packets * newPacket)
 {
     DEVICE_ID apDeviceID;
     DEVICE_ID clDeviceID;
@@ -133,7 +131,7 @@ void recPacket (packets * newPacket, DEVICE_ID receivingDeviceID)
             break;
         case TYPE_REGISTER_REPLY:
             recRegistrationReply (newPacket, & apDeviceID, & clDeviceID, & internetConnected);
-            processRegistrationReply (receivingDeviceID, apDeviceID, clDeviceID, internetConnected);
+            processRegistrationReply (receivingDeviceID, apDeviceID, clDeviceID, & internetConnected);
             break;
         case TYPE_DATA:
             recData (newPacket, & apDeviceID, & destDeviceID, & sourceDeviceID, & messageTotalLength, & messageFragmentLength, & hash, pMessageBody);
@@ -225,39 +223,6 @@ void recDataAck (packets * pAckPacket, DEVICE_ID * apDeviceID, DEVICE_ID * destD
 }
 
 //----------------------------------------------------------------------------------
-// DEVICE_ID helper functions
-void CreateDeviceID (DEVICE_ID * newDeviceID, DWORD value)
-{
-    *(DWORD *) newDeviceID = value;
-    *newDeviceID[4] = 0;    // just ignore the first 2 bytes
-    *newDeviceID[5] = 0;
-}
-
-BYTE CompareDeviceID (DEVICE_ID aDeviceID, DEVICE_ID bDeviceID)
-{
-    if ((*(DWORD *) aDeviceID) == (*(DWORD *) bDeviceID) )
-    {
-        if ((*(WORD *) & (aDeviceID[4]) ) == (*(WORD *) & bDeviceID[4]) )
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-void CopyDeviceID (DEVICE_ID * pDestination, DEVICE_ID source)
-{
-    memcpy (pDestination, source, DEVICE_ID_LENGTH);
-}
-
-void CopyDeviceIDs (DEVICE_ID * pDestination, DEVICE_ID * pSource, BYTE count)
-{
-    if (count > 0)
-    {
-        memcpy (pDestination, pSource, DEVICE_ID_LENGTH * count);
-    }
-}
-
 DWORD generateHash(BYTE * pMessageBody, WORD messageLength)
 {
     // set hash to the system time plus CRC32 of message content to ensure reasonable uniqueness
