@@ -19,6 +19,8 @@ DEVICE_ID nullDeviceID;
 void protocolInitialize (void)
 {
     CreateDeviceID (& nullDeviceID, 0);
+    
+    sManagerInit ();
 }
 
 // access points (AP's) and repeaters send this packet periodically
@@ -98,7 +100,7 @@ void sendDataAck (packets * pAckPacket, DEVICE_ID apDeviceID, DEVICE_ID destDevi
 //----------------------------------------------------------------------------------
 // reception of packets starts here and dispatches to specific packet handlers
 // and then the protocol process logic and application interface
-void recPacket (sTest * pTestData, packets * newPacket, DEVICE_ID receivingDeviceID)
+void recPacket (packets * newPacket, DEVICE_ID receivingDeviceID)
 {
     DEVICE_ID apDeviceID;
     DEVICE_ID clDeviceID;
@@ -119,31 +121,31 @@ void recPacket (sTest * pTestData, packets * newPacket, DEVICE_ID receivingDevic
     {
         case TYPE_HEARTBEAT:
             recHeartbeat (newPacket, & apDeviceID, & receiveSignalStrength, & deviceCount, pArrayOfDeviceIDs);
-            processHeartbeat (pTestData, receivingDeviceID, apDeviceID, receiveSignalStrength, deviceCount, pArrayOfDeviceIDs);
+            processHeartbeat (receivingDeviceID, apDeviceID, receiveSignalStrength, deviceCount, pArrayOfDeviceIDs);
             break;
         case TYPE_HEARTBEAT_REPLY:
             recHeartbeatReply (newPacket, & apDeviceID, & clDeviceID, & receiveSignalStrength);
-            processHeartbeatReply (pTestData, receivingDeviceID, apDeviceID, clDeviceID, receiveSignalStrength);
+            processHeartbeatReply (receivingDeviceID, apDeviceID, clDeviceID, receiveSignalStrength);
             break;
         case TYPE_REGISTER:
             recRegistration (newPacket, & apDeviceID, & clDeviceID);
-            processRegistration (pTestData, receivingDeviceID, apDeviceID, clDeviceID);
+            processRegistration (receivingDeviceID, apDeviceID, clDeviceID);
             break;
         case TYPE_REGISTER_REPLY:
             recRegistrationReply (newPacket, & apDeviceID, & clDeviceID, & internetConnected);
-            processRegistrationReply (pTestData, receivingDeviceID, apDeviceID, clDeviceID, internetConnected);
+            processRegistrationReply (receivingDeviceID, apDeviceID, clDeviceID, internetConnected);
             break;
         case TYPE_DATA:
             recData (newPacket, & apDeviceID, & destDeviceID, & sourceDeviceID, & messageTotalLength, & messageFragmentLength, & hash, pMessageBody);
-            processData (pTestData, receivingDeviceID, apDeviceID, destDeviceID, sourceDeviceID, messageTotalLength, messageFragmentLength, hash, pMessageBody);
+            processData (receivingDeviceID, apDeviceID, destDeviceID, sourceDeviceID, messageTotalLength, messageFragmentLength, hash, pMessageBody);
             break;
         case TYPE_MULTI:
             recMultiData (newPacket, & apDeviceID, & destDeviceID, & sourceDeviceID, & messageFragmentLength, & hash, & sequenceNumber, pMessageBody);
-            processMulti (pTestData, receivingDeviceID, apDeviceID, destDeviceID, sourceDeviceID, messageFragmentLength, hash, sequenceNumber, pMessageBody);
+            processMulti (receivingDeviceID, apDeviceID, destDeviceID, sourceDeviceID, messageFragmentLength, hash, sequenceNumber, pMessageBody);
             break;
         case TYPE_ACK:
             recDataAck (newPacket, & apDeviceID, & destDeviceID, & sourceDeviceID, & hash, & sequenceNumber);
-            processAck (pTestData, receivingDeviceID, apDeviceID, destDeviceID, sourceDeviceID, hash, sequenceNumber);
+            processAck (receivingDeviceID, apDeviceID, destDeviceID, sourceDeviceID, hash, sequenceNumber);
             break;
 
         default:

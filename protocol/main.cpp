@@ -6,7 +6,6 @@
 //  Copyright © 2016 Shannon T Bailey. All rights reserved.
 //
 
-
 #include "common.hpp"
 
 
@@ -18,4 +17,3 @@ int main(int argc, const char * argv[])
 
     return 0;
 }
-

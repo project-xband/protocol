@@ -9,34 +9,53 @@
 #ifndef interface_hpp
 #define interface_hpp
 
+#define HEARTBEAT_TIME 15000
 
 enum deviceRoles
 {
     ROLE_NULL         = 0,
     ROLE_CLIENT       = 1,
-    ROLE_ACCESS_POINT = 2
+    ROLE_REPEATER     = 2,
+    ROLE_ACCESS_POINT = 3
 };
+
+enum deviceState
+{
+    DEVICE_NULL            = 0,
+    DEVICE_INITIALIZED     = 1,
+    DEVICE_SEARCHING       = 2,
+    DEVICE_REGISTERING     = 3,
+    DEVICE_UNREGISTERING   = 4,
+    DEVICE_CONNECTED       = 5,
+    DEVICE_LOST_CONNECTION = 6,
+    DEVICE_AP_MODE         = 7
+};
+
+
+typedef struct sRegionDeviceInfo_t
+{
+    struct sRegionDeviceInfo_t * pNextRegionDeviceInfo;
+    
+    DEVICE_ID deviceID;
+    BYTE deviceRole;
+    BYTE receiveSignalStrength;
+    
+} sRegionDeviceInfo;
 
 typedef struct sDeviceInfo_t
 {
+    sRegionDeviceInfo * pRegionDeviceInfo;
+    
+    DEVICE_ID myDeviceID;
+    DEVICE_ID accessPointDeviceID;
+    
+    DWORD     heartbeatLastTime;
+    
     BYTE deviceTypeID;
     BYTE DeviceVersion;
     BYTE deviceRole;
     BYTE deviceState;
-    DEVICE_ID myDeviceID;
-    DEVICE_ID apDeviceID;
 } sDeviceInfo;
-
-typedef struct sRegionInfo_t
-{
-    BYTE deviceRole;
-    union
-    {
-        DEVICE_ID apDeviceID;
-        DEVICE_ID clDeviceID;
-    } uDeviceID;
-    struct sRegionInfo_t * pNextRegionInfo;
-} sRegionInfo;
 
 typedef struct sMessage_t
 {

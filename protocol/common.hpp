@@ -12,15 +12,17 @@
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
-//#include <stdint.h>
 #include <string.h>
-//#include <time.h>
 #include <sys/timeb.h>
+
+
+#define DEVICE_DEBUG
 
 
 #define DEVICE_ID_LENGTH 6
 #define DEVICE_LIST_MAX 6
 #define MAX_MESSAGE_LENGTH 48
+
 
 #define BYTE uint8_t
 #define WORD uint16_t
@@ -45,7 +47,7 @@ void sendData (packets * pDataPacket, DEVICE_ID apDeviceID, DEVICE_ID destDevice
 void sendMulti (packets * pMultiPacket, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, WORD messageLength, DWORD hash, WORD sequenceNumber, BYTE * pMessageBody, BYTE * pMessageBytesSent);
 void sendDataAck (packets * pAckPacket, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, DWORD hash, WORD sequenceNumber);
 
-void recPacket (sTest * pTestData, packets * newPacket, DEVICE_ID receivingDeviceID);
+void recPacket (packets * newPacket, DEVICE_ID receivingDeviceID);
 
 void recHeartbeat  (packets * pHeartbeatPacket, DEVICE_ID * apDeviceID, BYTE * pReceiveSignalStrength, BYTE * deviceCount, DEVICE_ID * pArrayOfDeviceIDs);
 void recHeartbeatReply (packets * pHeartbeatReplyPacket, DEVICE_ID * apDeviceID, DEVICE_ID * clDeviceID, BYTE * pReceiveSignalStrength);
@@ -71,30 +73,42 @@ uint32_t GetMilliSpan (uint32_t nTimeStart);
 //----------------------------------------------------------------------------------
 // interface.cpp function prototypes
 
+sDeviceInfo * initializeDeviceInfo (DEVICE_ID accessPointDeviceID, DEVICE_ID deviceID, BYTE initialDeviceRole);
+void runDeviceStateMachine (sDeviceInfo * pDeviceInfo);
+void transmitPacket (packets * packet);
+void receivePacket (void);
+void removeFirstPacketFromQueue (void);
+
 
 void getDeviceInfo (sDeviceInfo * pDeviceInfo);
-void getRegionInfo (sRegionInfo * pRegionInfo);
-void registerWithAp (void);
-void unregisterWithAp (void);
-void sendMessageCallBack (void);
-void sendMessage (sMessage * pMessage, void (* pCallBackFunction)() );
-void checkForMessages (sMessage * pMessage);
+void getRegionDeviceInfo (sDeviceInfo * pDeviceInfo, sRegionDeviceInfo * pRegionDeviceInfo);
+
+void registerWithAp (sDeviceInfo * pDeviceInfo, DEVICE_ID apDeviceID, void (* pRegisterCallBackFunction)() );
+void unregisterWithAp (sDeviceInfo * pDeviceInfo, DEVICE_ID apDeviceID, void (* pUnregisterCallBackFunction)() );
+
+void registerRequest (sDeviceInfo * pDeviceInfo, DEVICE_ID apDeviceID, void (* pRegisterRequestCallBackFunction)() );
+void unregisterRequest (sDeviceInfo * pDeviceInfo, DEVICE_ID apDeviceID, void (* pUnregisterRequestCallBackFunction)() );
+
+void sendMessage (sDeviceInfo * pDeviceInfo, sMessage * pMessage, void (* pSendMessageCallBackFunction)() );
+void sendMessageCallBack (sDeviceInfo * pDeviceInfo, sMessage * pMessage);
+
+void getMessage (sDeviceInfo * pDeviceInfo, sMessage * pMessage);
 
 
-void processHeartbeat (sTest * pTestData, DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, BYTE receiveSignalStrength, BYTE deviceCount, DEVICE_ID * pArrayOfDeviceIDs);
-void processHeartbeatReply (sTest * pTestData, DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID clDeviceID, BYTE receiveSignalStrength);
-void processRegistration (sTest * pTestData, DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID clDeviceID);
-void processRegistrationReply (sTest * pTestData, DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID clDeviceID, BYTE internetConnected);
-void processData (sTest* pTestData, DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, DWORD messageTotalLength, BYTE messageFragmentLength, DWORD hash, BYTE * pMessageBody);
-void processMulti (sTest * pTestData, DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, BYTE messageFragmentLength, DWORD hash, WORD sequenceNumber, BYTE * pMessageBody);
-void processAck (sTest * pTestData, DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, DWORD hash, WORD sequenceNumber);
+void processHeartbeat (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, BYTE receiveSignalStrength, BYTE deviceCount, DEVICE_ID * pArrayOfDeviceIDs);
+void processHeartbeatReply (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID clDeviceID, BYTE receiveSignalStrength);
+void processRegistration (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID clDeviceID);
+void processRegistrationReply (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID clDeviceID, BYTE internetConnected);
+void processData (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, DWORD messageTotalLength, BYTE messageFragmentLength, DWORD hash, BYTE * pMessageBody);
+void processMulti (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, BYTE messageFragmentLength, DWORD hash, WORD sequenceNumber, BYTE * pMessageBody);
+void processAck (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, DWORD hash, WORD sequenceNumber);
 
-void sManagerInit (void);  // Initialize send and receive message session subsystem
-void sendHeaderAndData (sTest * pTestData, BYTE * pMessage);  // setup a send message session
-void processSendSession (void);  // process each portion of the send session state and transmit message fragments, receive acks and handle errors
-void sentFullMessage (void);  // call Client or Access Point application code when the message has been completely sent
-void receiveHeaderAndData (sTest * pTestData, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, DWORD messageTotalLength, BYTE messageFragmentLength, DWORD hash, BYTE * pMessageBody);
-void processReceiveSession (void);  // process each portion of the receive session state and receive message fragments, send acks and handle timeout errors waiting for new message fragments
-void receivedFullMessage (void);  // call Client or Access Point application code when the message has been completely received
+void sManagerInit (void);
+void sendHeaderAndData (sDeviceInfo * pDeviceInfo, DEVICE_ID destinationDeviceID, BYTE * pMessage);
+void processSendSession (void);
+void sentFullMessage (void);
+void receiveHeaderAndData (DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, DWORD messageTotalLength, BYTE messageFragmentLength, DWORD hash, BYTE * pMessageBody);
+void processReceiveSession (void);
+void receivedFullMessage (void);
 
 #endif /* common_h */
