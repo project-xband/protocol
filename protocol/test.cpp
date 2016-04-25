@@ -64,18 +64,27 @@ void testRun (void)
     
     while (true)
     {
-        if ((pTestData->testTime + 1000) < GetMilliCount() )
+        if ((pTestData->testTime + 100) < GetMilliCount() )
         {
             pTestData->testTime = GetMilliCount();
             
 // create additional devices and scheduled events and cause various device states to occur
 //-------------------------
 // ADD TEST CODE HERE ...
-            if ((userTestTime + 2000) < GetMilliCount())
+            if ((userTestTime + 200) < GetMilliCount())
             {
                 BYTE pMessage[] = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-_-zyxwvutsrqponmlkjihgfedcba9876543210ZYXWVUTSRQPONMLKJIHGFEDCBA!";
-                sendMessage (pTestData->deviceInfo[1], apDeviceID, pMessage);
+                BYTE pMessage2[] = "Now is the time for all good Make School students to program on teh xBAND project until the entire world uses XBAND for all their needs";
+                BYTE pMessage3[] = "Now to sent from the access point to a client";
                 
+                printf ("Test time => %d\n", userTestTime);
+                
+                sendMessage (pTestData->deviceInfo[1], apDeviceID, pMessage);
+
+                sendMessage (pTestData->deviceInfo[2], apDeviceID, pMessage2);
+                
+                sendMessage (pTestData->deviceInfo[0], cl1DeviceID, pMessage3);
+
                 userTestTime = GetMilliCount();
             }
 

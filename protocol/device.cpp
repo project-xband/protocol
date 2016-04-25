@@ -34,7 +34,7 @@ sDeviceInfo * initializeDeviceInfo (DEVICE_ID accessPointDeviceID, DEVICE_ID dev
     CopyDeviceID (& pDeviceInfo->myDeviceID, deviceID);
     CopyDeviceID (& pDeviceInfo->accessPointDeviceID, accessPointDeviceID);
     
-    pDeviceInfo->heartbeatLastTime = 0;
+    pDeviceInfo->heartbeatLastTime = GetMilliCount();
     
     pDeviceInfo->deviceTypeID  = 1;
     pDeviceInfo->DeviceVersion = 1;
@@ -59,16 +59,18 @@ void runDeviceStateMachine (void)
     {
         pDeviceInfo = pDevices[index];
 
-/*        if (pDeviceInfo->deviceRole == ROLE_ACCESS_POINT)
+        if (pDeviceInfo->deviceRole == ROLE_ACCESS_POINT)
         {
-            if ((pDeviceInfo->heartbeatLastTime + 15000) > GetMilliCount() )
+            if ((pDeviceInfo->heartbeatLastTime + 15000) < GetMilliCount() )
             {
                 sendHeartbeat(& heartbeatPacket, pDeviceInfo->myDeviceID, 0, nullptr);
                 transmitPacket (& heartbeatPacket);
+                
+                pDeviceInfo->heartbeatLastTime = GetMilliCount();
             }
         }
-*/        
-        ;
+        
+        
         
     }
 }

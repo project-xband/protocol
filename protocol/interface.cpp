@@ -282,10 +282,11 @@ void receiveHeaderAndData (DEVICE_ID apDeviceID, DEVICE_ID destinationDeviceID, 
     }
 
     memcpy (pReceiveManager->pMessageBody, pMessageBody, messageFragmentLength);
-    
     pReceiveManager->pMessageBody[messageFragmentLength] = 0;
-    printf ("Message Head => %s\n", pReceiveManager->pMessageBody);
     
+#ifdef DEVICE_DEBUG
+    printf ("Message Head => %s\n", pReceiveManager->pMessageBody);
+#endif
     sendDataAck (& ackPacket, apDeviceID, destinationDeviceID, sourceDeviceID, hash, 0);
     
     transmitPacket(& ackPacket);
@@ -316,8 +317,10 @@ void receiveSessionData (DEVICE_ID apDeviceID, DEVICE_ID destinationDeviceID, DE
 
     memcpy (pReceiveManager->pMessageBody + messageSendOffset, pMessageBody, messageFragmentLength);
     pReceiveManager->pMessageBody[messageSendOffset + messageFragmentLength] = 0;
-    printf ("Message Multi => %s\n", pReceiveManager->pMessageBody);
     
+#ifdef DEVICE_DEBUG
+    printf ("Message Multi => %s\n", pReceiveManager->pMessageBody);
+#endif
     sendDataAck (& ackPacket, apDeviceID, destinationDeviceID, sourceDeviceID, hash, sequenceNumber);
     
     transmitPacket(& ackPacket);
