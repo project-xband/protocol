@@ -98,7 +98,7 @@ void unregisterRequest (sDeviceInfo * pDeviceInfo, DEVICE_ID apDeviceID); // voi
 void sendMessage (sDeviceInfo * pDeviceInfo, DEVICE_ID destinationDeviceID, BYTE * pMessageBody); // void (* pSendMessageCallBackFunction)() );
 void sendMessageCallBack (sDeviceInfo * pDeviceInfo, sMessage * pMessage);
 
-void getMessage (sDeviceInfo * pDeviceInfo, sMessage * pMessage);
+void getMessage (sDeviceInfo * pDeviceInfo, sMessage * * ppMessage);
 
 
 void processHeartbeat (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, BYTE receiveSignalStrength, BYTE deviceCount, DEVICE_ID * pArrayOfDeviceIDs);
@@ -115,10 +115,8 @@ void processAck (DEVICE_ID receivingDeviceID, DEVICE_ID apDeviceID, DEVICE_ID de
 void sManagerInit (void);
 void sendHeaderAndData (sDeviceInfo * pDeviceInfo, DEVICE_ID destinationDeviceID, BYTE * pMessageBody);
 void sendSessionData (sSendManager * pSendManager);
-void sentFullMessage (void);
 
 void receiveHeaderAndData (DEVICE_ID apDeviceID, DEVICE_ID destinationDeviceID, DEVICE_ID sourceDeviceID, DWORD messageTotalLength, BYTE messageFragmentLength, DWORD hash, BYTE * pMessageBody);
 void receiveSessionData (DEVICE_ID apDeviceID, DEVICE_ID destinationDeviceID, DEVICE_ID sourceDeviceID, BYTE messageFragmentLength, DWORD hash, WORD sequenceNumber, BYTE * pMessageBody);
-void receivedFullMessage (void);
 
 #endif /* common_h */

@@ -53,9 +53,42 @@ void sendMessageCallBack (sDeviceInfo * pDeviceInfo, sMessage * pMessage)
 {
     ;
 }
-void getMessage (sDeviceInfo * pDeviceInfo, sMessage * pMessage)
+void getMessage (sDeviceInfo * pDeviceInfo, sMessage * * ppMessage)
 {
-    ;
+    WORD index;
+    WORD length;
+    sManager * pManager;
+
+    *ppMessage = NULL;
+    
+    if (0 == (length = listLength (pReceiveManagerList) ) )
+        return;
+    
+    pManager = pReceiveManagerList;
+    
+    for (index = 0; index < length; index++)
+    {
+        if (NULL != pManager->puManager)
+        {
+            if (RECEIVE_SESSION_GOT_IT_ALL == pManager->puManager->pReceiveManagerList.sessionState)
+            {
+                *ppMessage = (sMessage *) malloc (sizeof(sMessage));
+// NTR check for NULL
+                CopyDeviceID (& (*ppMessage)->destinationDeviceID, pManager->puManager->pReceiveManagerList.destinationDeviceID);
+                CopyDeviceID (& (*ppMessage)->sourceDeviceID,      pManager->puManager->pReceiveManagerList.sourceDeviceID);
+                (*ppMessage)->messageTotalLength                 = pManager->puManager->pReceiveManagerList.messageTotalLength;
+
+// Note: return pMessageBody memory block to be freed by the caller after use
+                (*ppMessage)->pMessageBody                       = pManager->puManager->pReceiveManagerList.pMessageBody;
+                
+            // remove this session from the ReceiveManagerList.
+                listDeleteNode (& pReceiveManagerList, pManager);
+                
+                return;
+            }
+        }
+        pManager = pManager->pNextManager;
+    }
 }
 
 
@@ -225,27 +258,31 @@ MULTI:
             break;
             
         case SEND_SESSION_WAITING_FOR_COMPLETE_ACK:
-            ;
-            break;
-            
-        case SEND_SESSION_CALLED_APP_CODE:
-            ;
-            break;
-            
-        case SEND_SESSION_WAITING_FOR_APP_TO_END:
-            ;
+            pSendManager->sessionState = SEND_SESSION_NULL;
+
+            WORD index;
+            WORD length;
+            sManager * pManager;
+    
+            if (0 == (length = listLength (pSendManagerList) ) )
+                return;
+    
+            pManager = pSendManagerList;
+    
+            for (index = 0; index < length; index++)
+            {
+                if (pSendManager == & (pManager->puManager->pSendManagerList) )
+                {
+                    listDeleteNode (& pSendManagerList, pManager);
+                    break;
+                }
+                pManager = pManager->pNextManager;
+            }
             break;
             
         default:
             break;
     }
-}
-
-
-// call Client or Access Point application code when the message has been completely sent
-void sentFullMessage (void)
-{
-    ;
 }
 
 
@@ -327,14 +364,6 @@ void receiveSessionData (DEVICE_ID apDeviceID, DEVICE_ID destinationDeviceID, DE
 }
 
 
-// call Client or Access Point application code when the message has been completely received
-void receivedFullMessage (void)
-{
-    ;
-}
-
-
-
 //----------------------------------------------------------------------------------
 // the basis is from: http://www.cprogramming.com/snippets/source-code/singly-linked-list-insert-remove-add-count
 
@@ -347,6 +376,7 @@ void listAppendNode (sManager * * ppManagerList, sManager * pNewManager)
     if (pRight == NULL)
     {
         *ppManagerList = pNewManager;
+        pNewManager->pNextManager = NULL;
         return;
     }
     
@@ -369,15 +399,19 @@ int listDeleteNode (sManager * * ppManagerList, sManager * pManagerToDelete)
     {
         if ( pTemp == pManagerToDelete)
         {
-            if (  pTemp == * ppManagerList)
+            if ( pTemp == * ppManagerList)
             {
                 * ppManagerList = pTemp->pNextManager;  // if pTemp is the only node, the list head is set to NULL here
+                if (NULL != pTemp->puManager )
+                    free ( pTemp->puManager );
                 free ( pTemp );
                 return 1;
             }
             else
             {
                 pPrev->pNextManager = pTemp->pNextManager;  // ignore warning about pPrev maybe not be set before use
+                if (NULL != pTemp->puManager )
+                    free ( pTemp->puManager );
                 free( pTemp );
                 return 1;
             }

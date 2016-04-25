@@ -71,10 +71,10 @@ void testRun (void)
 // create additional devices and scheduled events and cause various device states to occur
 //-------------------------
 // ADD TEST CODE HERE ...
-            if ((userTestTime + 200) < GetMilliCount())
+            if ((userTestTime + 2) < GetMilliCount())
             {
                 BYTE pMessage[] = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-_-zyxwvutsrqponmlkjihgfedcba9876543210ZYXWVUTSRQPONMLKJIHGFEDCBA!";
-                BYTE pMessage2[] = "Now is the time for all good Make School students to program on teh xBAND project until the entire world uses XBAND for all their needs";
+                BYTE pMessage2[] = "Now is the time for all good Make School students to program on the xBAND project until the entire world uses XBAND for all their needs";
                 BYTE pMessage3[] = "Now to sent from the access point to a client";
                 
                 printf ("Test time => %d\n", userTestTime);
@@ -86,6 +86,34 @@ void testRun (void)
                 sendMessage (pTestData->deviceInfo[0], cl1DeviceID, pMessage3);
 
                 userTestTime = GetMilliCount();
+            }
+            
+            testStepSimulation ();
+            
+            
+            sMessage * pReceivedMessage;
+            getMessage (pTestData->deviceInfo[0], & pReceivedMessage);
+            if (NULL != pReceivedMessage)
+            {
+                printf ("Got device 0 message: %s\n", pReceivedMessage->pMessageBody);
+                free(pReceivedMessage->pMessageBody);
+                free(pReceivedMessage);
+            }
+
+            getMessage (pTestData->deviceInfo[0], & pReceivedMessage);
+            if (NULL != pReceivedMessage)
+            {
+                printf ("Got device 1 message: %s\n", pReceivedMessage->pMessageBody);
+                free(pReceivedMessage->pMessageBody);
+                free(pReceivedMessage);
+            }
+
+            getMessage (pTestData->deviceInfo[1], & pReceivedMessage);
+            if (NULL != pReceivedMessage)
+            {
+                printf ("Got device 2 message: %s\n", pReceivedMessage->pMessageBody);
+                free(pReceivedMessage->pMessageBody);
+                free(pReceivedMessage);
             }
 
             
