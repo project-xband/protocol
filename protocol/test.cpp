@@ -59,6 +59,9 @@ void testRun (void)
     pTestData->deviceCount++;
         
 // run test loop
+
+    DWORD userTestTime = GetMilliCount();
+    
     while (true)
     {
         if ((pTestData->testTime + 1000) < GetMilliCount() )
@@ -68,11 +71,13 @@ void testRun (void)
 // create additional devices and scheduled events and cause various device states to occur
 //-------------------------
 // ADD TEST CODE HERE ...
-            
-            BYTE pMessage[] = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
- 
-            sendMessage (pTestData->deviceInfo[1], apDeviceID, pMessage);
-
+            if ((userTestTime + 2000) < GetMilliCount())
+            {
+                BYTE pMessage[] = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-_-zyxwvutsrqponmlkjihgfedcba9876543210ZYXWVUTSRQPONMLKJIHGFEDCBA!";
+                sendMessage (pTestData->deviceInfo[1], apDeviceID, pMessage);
+                
+                userTestTime = GetMilliCount();
+            }
 
             
 // END OF TEST CODE SECTION
@@ -89,8 +94,9 @@ void testStepSimulation (void)
 {
 // run receive until no sessions or transmitted packets are still in the transmit queue
 
-    receivePacket ();
+//    receivePacket ();
     runDeviceStateMachine ();
+
 // NTR when session managers are deleted, enable checking 
     while ((0 < pTestData->transmittedPacketQueueDepth) )
 //        || (NULL != pSendManagerList) || (NULL != pReceiveManagerList) )

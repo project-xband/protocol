@@ -79,7 +79,7 @@ void sendMulti (packets * pMultiPacket, DEVICE_ID apDeviceID, DEVICE_ID destDevi
     CopyDeviceID (& pMultiPacket->multi.sourceDeviceID,      sourceDeviceID);
     pMultiPacket->multi.hash = hash;
     pMultiPacket->multi.sequenceNumber = sequenceNumber;
-    *pMessageBytesSent = (messageLength< MAX_MESSAGE_LENGTH) ? messageLength : MAX_MESSAGE_LENGTH;
+    *pMessageBytesSent = (messageLength < MAX_MESSAGE_LENGTH) ? messageLength : MAX_MESSAGE_LENGTH;
     pMultiPacket->multi.messageFragmentLength = *pMessageBytesSent;
     memcpy (pMultiPacket->multi.messageBody, pMessageBody, *pMessageBytesSent);
 }
@@ -112,7 +112,7 @@ void recPacket (DEVICE_ID receivingDeviceID, packets * newPacket)
     BYTE      messageFragmentLength;
     DWORD     hash;
     WORD      sequenceNumber;
-    BYTE      pMessageBody[MAX_MESSAGE_LENGTH + 2];
+    BYTE    * pMessageBody;
     
     
     switch (newPacket->standard.typeOfPacket)
@@ -134,11 +134,11 @@ void recPacket (DEVICE_ID receivingDeviceID, packets * newPacket)
             processRegistrationReply (receivingDeviceID, apDeviceID, clDeviceID, & internetConnected);
             break;
         case TYPE_DATA:
-            recData (newPacket, & apDeviceID, & destDeviceID, & sourceDeviceID, & messageTotalLength, & messageFragmentLength, & hash, pMessageBody);
+            recData (newPacket, & apDeviceID, & destDeviceID, & sourceDeviceID, & messageTotalLength, & messageFragmentLength, & hash, & pMessageBody);
             processData (receivingDeviceID, apDeviceID, destDeviceID, sourceDeviceID, messageTotalLength, messageFragmentLength, hash, pMessageBody);
             break;
         case TYPE_MULTI:
-            recMultiData (newPacket, & apDeviceID, & destDeviceID, & sourceDeviceID, & messageFragmentLength, & hash, & sequenceNumber, pMessageBody);
+            recMultiData (newPacket, & apDeviceID, & destDeviceID, & sourceDeviceID, & messageFragmentLength, & hash, & sequenceNumber, & pMessageBody);
             processMulti (receivingDeviceID, apDeviceID, destDeviceID, sourceDeviceID, messageFragmentLength, hash, sequenceNumber, pMessageBody);
             break;
         case TYPE_ACK:
@@ -188,7 +188,7 @@ void recRegistrationReply (packets * pRegistrationReplyPacket, DEVICE_ID * apDev
 }
 
 // send the header and whole message body or first fragment of message body
-void recData (packets * pDataPacket, DEVICE_ID * apDeviceID, DEVICE_ID * destDeviceID, DEVICE_ID * sourceDeviceID, DWORD * messageTotalLength, BYTE * messageFragmentLength, DWORD * hash, BYTE * pMessageBody)
+void recData (packets * pDataPacket, DEVICE_ID * apDeviceID, DEVICE_ID * destDeviceID, DEVICE_ID * sourceDeviceID, DWORD * messageTotalLength, BYTE * messageFragmentLength, DWORD * hash, BYTE * * ppMessageBody)
 {
     CopyDeviceID (apDeviceID,     pDataPacket->data.accessPointDeviceID);
     CopyDeviceID (destDeviceID,   pDataPacket->data.destinationDeviceID);
@@ -196,11 +196,11 @@ void recData (packets * pDataPacket, DEVICE_ID * apDeviceID, DEVICE_ID * destDev
     *hash = pDataPacket->data.hash;
     *messageTotalLength = pDataPacket->data.messageTotalLength;
     *messageFragmentLength = ((*messageTotalLength) > MAX_MESSAGE_LENGTH) ? MAX_MESSAGE_LENGTH : *messageTotalLength;
-    memcpy (pMessageBody, pDataPacket->data.messageBody, *messageFragmentLength);
+    *ppMessageBody = & pDataPacket->data.messageBody[0];
 }
 
 // send additional message  fragments
-void recMultiData (packets * pMultiPacket, DEVICE_ID * apDeviceID, DEVICE_ID * destDeviceID, DEVICE_ID * sourceDeviceID, BYTE * messageFragmentLength, DWORD * hash, WORD * sequenceNumber, BYTE * pMessageBody)
+void recMultiData (packets * pMultiPacket, DEVICE_ID * apDeviceID, DEVICE_ID * destDeviceID, DEVICE_ID * sourceDeviceID, BYTE * messageFragmentLength, DWORD * hash, WORD * sequenceNumber, BYTE * * ppMessageBody)
 {
     CopyDeviceID (apDeviceID,     pMultiPacket->multi.accessPointDeviceID);
     CopyDeviceID (destDeviceID,   pMultiPacket->multi.destinationDeviceID);
@@ -209,7 +209,7 @@ void recMultiData (packets * pMultiPacket, DEVICE_ID * apDeviceID, DEVICE_ID * d
     *sequenceNumber = pMultiPacket->multi.sequenceNumber;
     *messageFragmentLength = pMultiPacket->multi.messageFragmentLength;
     *messageFragmentLength = ((*messageFragmentLength) > MAX_MESSAGE_LENGTH) ? MAX_MESSAGE_LENGTH : *messageFragmentLength;
-    memcpy (pMessageBody, pMultiPacket->multi.messageBody, *messageFragmentLength);
+    *ppMessageBody = & pMultiPacket->multi.messageBody[0];
 }
 
 // receiver of message replies to sender with ack for each data or multi packet received

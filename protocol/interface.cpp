@@ -137,7 +137,7 @@ void sManagerInit (void)
 
 
 // setup a send message session
-void sendHeaderAndData (sDeviceInfo * pDeviceInfo, DEVICE_ID destinationDeviceID, BYTE * pMessage)
+void sendHeaderAndData (sDeviceInfo * pDeviceInfo, DEVICE_ID destinationDeviceID, BYTE * pMessageBody)
 {
     sManager     * pManager;
     sSendManager * pSendManager;
@@ -146,13 +146,13 @@ void sendHeaderAndData (sDeviceInfo * pDeviceInfo, DEVICE_ID destinationDeviceID
     BYTE           bytesSent;
     DWORD          messageLength;
     
-    messageLength = (DWORD) strlen((const char *)pMessage);
+    messageLength = (DWORD) strlen((const char *)pMessageBody);
 
-    sendData(& dataPacket, pDeviceInfo->accessPointDeviceID, destinationDeviceID, pDeviceInfo->myDeviceID, messageLength, &hashValue, pMessage, &bytesSent);
+    sendData(& dataPacket, pDeviceInfo->accessPointDeviceID, destinationDeviceID, pDeviceInfo->myDeviceID, messageLength, &hashValue, pMessageBody, &bytesSent);
 
 // NTR:  check for allocator failure
-    pManager     = (sManager *)malloc(sizeof(sManager));
-    pSendManager = (sSendManager *)malloc(sizeof(sSendManager));
+    pManager     = (sManager *) malloc (sizeof(sManager));
+    pSendManager = (sSendManager *) malloc (sizeof(sSendManager));
     
     pManager->puManager = (uMessageManager *) pSendManager;
     
@@ -165,7 +165,7 @@ void sendHeaderAndData (sDeviceInfo * pDeviceInfo, DEVICE_ID destinationDeviceID
     pSendManager->messageTotalLength    = messageLength;
     pSendManager->messageFragmentLength = bytesSent;
     pSendManager->sequenceNumber        = 0;
-    pSendManager->pMessageBody          = pMessage;
+    pSendManager->pMessageBody          = pMessageBody;
     
     if (bytesSent < messageLength)
     {
@@ -187,29 +187,30 @@ void sendSessionData (sSendManager * pSendManager)
     DEVICE_ID      sourceDeviceID;
     DWORD          hashValue;
     WORD           sequenceNumber;
-    DWORD          messageTotalLength;
+    DWORD          messageLength;
     BYTE           messageFragmentLength;
     DWORD          messageSendOffset;
-    BYTE         * pMessage;
+    BYTE         * pMessageBody;
     
     switch (pSendManager->sessionState) {
         case SEND_SESSION_WAITING_FOR_HEADER_ACK:
+MULTI:
             CopyDeviceID (& apDeviceID, pSendManager->apDeviceID);
             CopyDeviceID (& destinationDeviceID, pSendManager->destinationDeviceID);
             CopyDeviceID (& sourceDeviceID, pSendManager->sourceDeviceID);
             hashValue             = pSendManager->hash;
-            messageTotalLength    = pSendManager->messageTotalLength;
+            messageLength         = pSendManager->messageTotalLength;
             messageFragmentLength = pSendManager->messageFragmentLength;
+            
             sequenceNumber      = ++pSendManager->sequenceNumber;
-            pMessage              = pSendManager->pMessageBody;
             
             messageSendOffset     = sequenceNumber * MAX_MESSAGE_LENGTH;
-            messageTotalLength   -= messageSendOffset;
-            pMessage              = pMessage + messageSendOffset;
+            messageLength        -= messageSendOffset;
+            pMessageBody          = pSendManager->pMessageBody + messageSendOffset;
             
-            sendMulti (& dataPacket, apDeviceID, destinationDeviceID, sourceDeviceID, messageTotalLength, hashValue, sequenceNumber, pMessage, & messageFragmentLength);
+            sendMulti (& dataPacket, apDeviceID, destinationDeviceID, sourceDeviceID, messageLength, hashValue, sequenceNumber, pMessageBody, & messageFragmentLength);
             
-            if (messageFragmentLength < messageTotalLength)
+            if (messageFragmentLength < messageLength)
             {
                 pSendManager->sessionState = SEND_SESSION_WAITING_FOR_MULTI_ACK;
             } else {
@@ -220,7 +221,7 @@ void sendSessionData (sSendManager * pSendManager)
             break;
         
         case SEND_SESSION_WAITING_FOR_MULTI_ACK:
-            ;
+            goto MULTI;
             break;
             
         case SEND_SESSION_WAITING_FOR_COMPLETE_ACK:
@@ -256,8 +257,8 @@ void receiveHeaderAndData (DEVICE_ID apDeviceID, DEVICE_ID destinationDeviceID, 
     sReceiveManager * pReceiveManager;
 
 // NTR:  check for allocator failure
-    pManager        = (sManager *)malloc(sizeof(sManager));
-    pReceiveManager = (sReceiveManager *)malloc(sizeof(sReceiveManager));
+    pManager        = (sManager *) malloc (sizeof(sManager));
+    pReceiveManager = (sReceiveManager *) malloc (sizeof(sReceiveManager));
     
     pManager->puManager = (uMessageManager *) pReceiveManager;
     
@@ -270,7 +271,8 @@ void receiveHeaderAndData (DEVICE_ID apDeviceID, DEVICE_ID destinationDeviceID, 
     pReceiveManager->messageTotalLength    = messageTotalLength;
     pReceiveManager->messageFragmentLength = messageFragmentLength;
     pReceiveManager->sequenceNumber        = 0;
-    pReceiveManager->pMessageBody          = pMessageBody;
+    
+    pReceiveManager->pMessageBody          = (BYTE *) malloc (messageTotalLength + 2);
     
     if (messageFragmentLength == messageTotalLength)
     {
@@ -279,8 +281,10 @@ void receiveHeaderAndData (DEVICE_ID apDeviceID, DEVICE_ID destinationDeviceID, 
         pReceiveManager->sessionState = RECEIVE_SESSION_GET_MULTI;
     }
 
-    printf ("Message Head => %s\n", pMessageBody);
     memcpy (pReceiveManager->pMessageBody, pMessageBody, messageFragmentLength);
+    
+    pReceiveManager->pMessageBody[messageFragmentLength] = 0;
+    printf ("Message Head => %s\n", pReceiveManager->pMessageBody);
     
     sendDataAck (& ackPacket, apDeviceID, destinationDeviceID, sourceDeviceID, hash, 0);
     
@@ -303,16 +307,17 @@ void receiveSessionData (DEVICE_ID apDeviceID, DEVICE_ID destinationDeviceID, DE
     }
     
     messageTotalLength = pReceiveManager->messageTotalLength;
-    messageSendOffset = sequenceNumber * MAX_MESSAGE_LENGTH;
+    messageSendOffset  = sequenceNumber * MAX_MESSAGE_LENGTH;
     
     if (messageTotalLength == (messageSendOffset + messageFragmentLength) )
     {
         pReceiveManager->sessionState = RECEIVE_SESSION_GOT_IT_ALL;
     }
-    
-    printf ("Message Multi => %s\n", pMessageBody);
-    memcpy (pReceiveManager->pMessageBody + messageSendOffset, pMessageBody, messageFragmentLength);
 
+    memcpy (pReceiveManager->pMessageBody + messageSendOffset, pMessageBody, messageFragmentLength);
+    pReceiveManager->pMessageBody[messageSendOffset + messageFragmentLength] = 0;
+    printf ("Message Multi => %s\n", pReceiveManager->pMessageBody);
+    
     sendDataAck (& ackPacket, apDeviceID, destinationDeviceID, sourceDeviceID, hash, sequenceNumber);
     
     transmitPacket(& ackPacket);

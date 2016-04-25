@@ -54,8 +54,8 @@ void recHeartbeat  (packets * pHeartbeatPacket, DEVICE_ID * apDeviceID, BYTE * p
 void recHeartbeatReply (packets * pHeartbeatReplyPacket, DEVICE_ID * apDeviceID, DEVICE_ID * clDeviceID, BYTE * pReceiveSignalStrength);
 void recRegistration (packets * pRegistrationPacket, DEVICE_ID * apDeviceID, DEVICE_ID * clDeviceID);
 void recRegistrationReply (packets * pRegistrationReplyPacket, DEVICE_ID * apDeviceID, DEVICE_ID * clDeviceID, BYTE * internetConnected);
-void recData (packets * pDataPacket, DEVICE_ID * apDeviceID, DEVICE_ID * destDeviceID, DEVICE_ID * sourceDeviceID, DWORD * messageTotalLength, BYTE * messageFragmentLength, DWORD * hash, BYTE * pMessageBody);
-void recMultiData (packets * pMultiPacket, DEVICE_ID * apDeviceID, DEVICE_ID * destDeviceID, DEVICE_ID * sourceDeviceID, BYTE * messageFragmentLength, DWORD * hash, WORD * sequenceNumber, BYTE * pMessageBody);
+void recData (packets * pDataPacket, DEVICE_ID * apDeviceID, DEVICE_ID * destDeviceID, DEVICE_ID * sourceDeviceID, DWORD * messageTotalLength, BYTE * messageFragmentLength, DWORD * hash, BYTE * * ppMessageBody);
+void recMultiData (packets * pMultiPacket, DEVICE_ID * apDeviceID, DEVICE_ID * destDeviceID, DEVICE_ID * sourceDeviceID, BYTE * messageFragmentLength, DWORD * hash, WORD * sequenceNumber, BYTE * * ppMessageBody);
 void recDataAck (packets * pAckPacket, DEVICE_ID * apDeviceID, DEVICE_ID * destDeviceID, DEVICE_ID * sourceDeviceID, DWORD * hash, WORD * sequenceNumber);
 
 
