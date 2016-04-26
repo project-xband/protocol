@@ -175,11 +175,11 @@ void framePacket (BYTE * * ppFramedData, WORD * pFramedLength, BYTE * pPacketDat
                 break;
             case '{':
                 *pFramedData++ = '%';
-                *pFramedData++ = '{';
+                *pFramedData++ = '[';
                 break;
             case '}':
                 *pFramedData++ = '%';
-                *pFramedData++ = '}';
+                *pFramedData++ = ']';
                 break;
             default:
                 *pFramedData++ = *pData;
@@ -242,8 +242,24 @@ FoundClosingFrame:
                 if ('%' == *pFramedData)
                 {
                     pFramedData++;
+                    switch (*pFramedData)
+                    {
+                        case '[':
+                            *pUnframedData++ = '{';
+                            break;
+                        case ']':
+                            *pUnframedData++ = '}';
+                            break;
+                        default:
+                            *pUnframedData++ = *pFramedData;
+                            break;
+                    }
+                    pFramedData++;
                 }
-                *pUnframedData++ = *pFramedData++;
+                else
+                {
+                    *pUnframedData++ = *pFramedData++;
+                }
             }
     }
     
