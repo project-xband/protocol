@@ -36,6 +36,7 @@ void testEncoders (void)
     WORD   framedPacketLength;
 
     //BYTE pMessage[] = "abcdefghijklmnopqrst%%uvwxyz012345%{6789ABCDEFGHIJKLMNOPQRSTUVWXYZ-_-zyxwvutsrqponmlkjihgfedcba987654%}3210ZYXWVUTSRQPONMLKJIHGFEDCBA!";
+    
     BYTE pMessage[] = "ab%%cd%{efg%}hi!";
     BYTE messageLength = strlen((const char *)pMessage);
 
@@ -47,12 +48,27 @@ void testEncoders (void)
 
     BYTE * pPacketData;
     BYTE   packetLength;
-    extractPacket (& pPacketData, & packetLength, pFramedPacketData, framedPacketLength);
+    WORD   consumedBytes;
+    
+    extractPacket (& pPacketData, & packetLength, pFramedPacketData, framedPacketLength, & consumedBytes);
 
     *(pPacketData + packetLength) = 0;     // hack in null on binary byte datat that could have zero byte in it...  arg
 
     printf ("Packet Data =[%s]\n", pPacketData);
+    
+    
+    
+    WORD length;
+    WORD consumed;
+    BYTE pMessagePlus[] = "{ab%%cd%{efg%}hi!}{foooooffff";
+    length = strlen ((const char *)pMessagePlus);
+    extractPacket (& pPacketData, & packetLength, pMessagePlus, length, & consumed);
 
+    *(pPacketData + packetLength) = 0;     // hack in null on binary byte datat that could have zero byte in it...  arg
+
+    printf ("Packet Data =[%s]  consumed bytes = %d\n", pPacketData, consumed);
+    
+    ;
 }
 
 

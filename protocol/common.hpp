@@ -79,7 +79,7 @@ void receivePacket (void);
 void removeFirstPacketFromQueue (void);
 
 void framePacket (BYTE * * ppFramedPacketData, WORD * pFramedPacketLength, BYTE * pPacketData, BYTE packetLength);
-void extractPacket (BYTE * * ppPacketData, BYTE * pPacketLength, BYTE * pFramedPacketData, WORD framePacketLength);
+void extractPacket (BYTE * * ppPacketData, BYTE * pPacketLength, BYTE * pFramedPacketData, WORD framePacketLength, WORD * pConsumedLength);
 
 void CreateDeviceID (DEVICE_ID * newDeviceID, DWORD value);
 BYTE CompareDeviceID (DEVICE_ID aDeviceID, DEVICE_ID bDeviceID);
