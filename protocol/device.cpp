@@ -129,6 +129,124 @@ void removeFirstPacketFromQueue (void)
 #endif
 }
 
+//----------------------------------------------------------------------------------
+// receive packet data and length and use '%' as escape character for '%' '{' and '}' while
+// while using '{' as start of frame andn '}' as end of frame character values
+// first scan packet data for characters that require escaping, add those to start and end frame character total
+// and allocate a new buffer for the total.  Then copy the start frame character, followed by the
+// bytes that don't require escaping, and special copy for escaped characters.  Lastly close with final end of frame character.
+
+void framePacket (BYTE * * ppFramedData, WORD * pFramedLength, BYTE * pPacketData, BYTE packetLength)
+{
+    WORD index;
+    BYTE * pFramedData;
+    BYTE * pData;
+    WORD calculatedLength;
+
+    for (index = 0, calculatedLength = 0, pData = pPacketData; index < packetLength; index++, pData++)
+    {
+        switch (*pData)
+        {
+            case '%':
+            case '{':
+            case '}':
+                calculatedLength += 2;
+                break;
+            default:
+                calculatedLength++;
+        }
+    }
+    
+    calculatedLength += 2;  // add length of opening and closing curly braces
+    
+    pFramedData = (BYTE *) malloc (calculatedLength + 2);
+    
+    *ppFramedData = pFramedData ;
+    
+    *pFramedData++ = '{';
+    
+    for (index = 0, pData = pPacketData; index < packetLength; index++, pData++)
+    {
+        switch (*pData)
+        {
+            case '%':
+                *pFramedData++ = '%';
+                *pFramedData++ = '%';
+                break;
+            case '{':
+                *pFramedData++ = '%';
+                *pFramedData++ = '{';
+                break;
+            case '}':
+                *pFramedData++ = '%';
+                *pFramedData++ = '}';
+                break;
+            default:
+                *pFramedData++ = *pData;
+                break;
+        }
+    }
+
+    *pFramedData++ = '}';
+    *pFramedLength = calculatedLength;
+}
+
+void extractPacket (BYTE * * ppPacketData, BYTE * pPacketLength, BYTE * pFramedPacketData, WORD framePacketLength)
+{
+    WORD index;
+    BYTE * pFramedData;
+    BYTE * pEndOfFramedData;
+    WORD calculatedLength = 0;
+    BYTE * pUnframedData;
+    
+    *ppPacketData = NULL;
+    
+    pEndOfFramedData = pFramedPacketData + framePacketLength;
+    
+    if ('{' == *pFramedPacketData)
+    {
+        pFramedPacketData++;
+    
+        pFramedData = pFramedPacketData;
+
+        for ( ; pFramedData < pEndOfFramedData; pFramedData++)
+        {
+            if ('%' == *pFramedData)
+            {
+                pFramedData++;
+            }
+            else
+            {
+                if ('}' == *pFramedData)
+                    goto FoundClosingFrame;
+            }
+            calculatedLength++;
+        }
+    // if we exit the for loop without finding the closing brace (frame) this is an error
+        return;
+        
+
+FoundClosingFrame:
+        
+// NTR check for alloc failure
+        pUnframedData = (BYTE *) malloc (calculatedLength + 2);
+        *ppPacketData = pUnframedData;
+        *pPacketLength = calculatedLength;
+        
+        pFramedData   = pFramedPacketData;  // start after opening brace, advanced above
+    
+        for (index = 0; index < calculatedLength; index++)
+            {
+                if ('%' == *pFramedData)
+                {
+                    pFramedData++;
+                }
+                *pUnframedData++ = *pFramedData++;
+            }
+    }
+    
+}
+
 
 //----------------------------------------------------------------------------------
 // DEVICE_ID helper functions

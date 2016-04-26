@@ -16,13 +16,43 @@ extern sManager * pReceiveManagerList;
 
 sTest * pTestData;
 
+void testEncoders (void);
 
 //----------------------------------------------------------------------------------
 void test (void)
 {
     testInit();
-
+    
+    testEncoders ();
+    
     testRun();
+}
+
+
+void testEncoders (void)
+{
+
+    BYTE * pFramedPacketData;
+    WORD   framedPacketLength;
+
+    //BYTE pMessage[] = "abcdefghijklmnopqrst%%uvwxyz012345%{6789ABCDEFGHIJKLMNOPQRSTUVWXYZ-_-zyxwvutsrqponmlkjihgfedcba987654%}3210ZYXWVUTSRQPONMLKJIHGFEDCBA!";
+    BYTE pMessage[] = "ab%%cd%{efg%}hi!";
+    BYTE messageLength = strlen((const char *)pMessage);
+
+    framePacket (& pFramedPacketData, & framedPacketLength, pMessage, messageLength);
+
+    *(pFramedPacketData + framedPacketLength) = 0;    // hack in null on binary byte datat that could have zero byte in it...  arg
+
+    printf ("Framed Data =[%s]\n", pFramedPacketData);
+
+    BYTE * pPacketData;
+    BYTE   packetLength;
+    extractPacket (& pPacketData, & packetLength, pFramedPacketData, framedPacketLength);
+
+    *(pPacketData + packetLength) = 0;     // hack in null on binary byte datat that could have zero byte in it...  arg
+
+    printf ("Packet Data =[%s]\n", pPacketData);
+
 }
 
 
@@ -71,6 +101,9 @@ void testRun (void)
 // create additional devices and scheduled events and cause various device states to occur
 //-------------------------
 // ADD TEST CODE HERE ...
+            
+            
+            
             if ((userTestTime + 2) < GetMilliCount())
             {
                 BYTE pMessage[] = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-_-zyxwvutsrqponmlkjihgfedcba9876543210ZYXWVUTSRQPONMLKJIHGFEDCBA!";

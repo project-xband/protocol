@@ -57,14 +57,14 @@ void sendRegistrationReply (packets * pRegistrationPacket, DEVICE_ID apDeviceID,
 }
 
 // clients, AP's and repeaters send messages using this packet tothe send the heder and initial data fragment
-void sendData (packets * pDataPacket, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, WORD messageLength, DWORD * hash, BYTE * pMessageBody, BYTE * pMessageBytesSent)
+void sendData (packets * pDataPacket, DEVICE_ID apDeviceID, DEVICE_ID destDeviceID, DEVICE_ID sourceDeviceID, WORD messageLength, DWORD * pHash, BYTE * pMessageBody, BYTE * pMessageBytesSent)
 {    
     pDataPacket->standard.typeOfPacket = TYPE_DATA;
     CopyDeviceID (& pDataPacket->data.accessPointDeviceID, apDeviceID);
     CopyDeviceID (& pDataPacket->data.destinationDeviceID, destDeviceID);
     CopyDeviceID (& pDataPacket->data.sourceDeviceID,      sourceDeviceID);
-    *hash = generateHash(pMessageBody, messageLength);
-    pDataPacket->data.hash = *hash;
+    *pHash = generateHash(pMessageBody, messageLength);
+    pDataPacket->data.hash = *pHash;
     pDataPacket->data.messageTotalLength = messageLength;
     *pMessageBytesSent = (messageLength < MAX_MESSAGE_LENGTH) ? messageLength : MAX_MESSAGE_LENGTH;
     memcpy (pDataPacket->data.messageBody, pMessageBody, *pMessageBytesSent);

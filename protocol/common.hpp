@@ -78,6 +78,9 @@ void transmitPacket (packets * packet);
 void receivePacket (void);
 void removeFirstPacketFromQueue (void);
 
+void framePacket (BYTE * * ppFramedPacketData, WORD * pFramedPacketLength, BYTE * pPacketData, BYTE packetLength);
+void extractPacket (BYTE * * ppPacketData, BYTE * pPacketLength, BYTE * pFramedPacketData, WORD framePacketLength);
+
 void CreateDeviceID (DEVICE_ID * newDeviceID, DWORD value);
 BYTE CompareDeviceID (DEVICE_ID aDeviceID, DEVICE_ID bDeviceID);
 void CopyDeviceID (DEVICE_ID * pDestination, DEVICE_ID source);

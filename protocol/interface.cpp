@@ -181,7 +181,7 @@ void sendHeaderAndData (sDeviceInfo * pDeviceInfo, DEVICE_ID destinationDeviceID
     
     messageLength = (DWORD) strlen((const char *)pMessageBody);
 
-    sendData(& dataPacket, pDeviceInfo->accessPointDeviceID, destinationDeviceID, pDeviceInfo->myDeviceID, messageLength, &hashValue, pMessageBody, &bytesSent);
+    sendData(& dataPacket, pDeviceInfo->accessPointDeviceID, destinationDeviceID, pDeviceInfo->myDeviceID, messageLength, & hashValue, pMessageBody, & bytesSent);
 
 // NTR:  check for allocator failure
     pManager     = (sManager *) malloc (sizeof(sManager));
